@@ -4,7 +4,6 @@ import arcade
 
 from .assets import get_tile_map_path
 from .constants import (
-    CHARACTER_SCALING,
     GRAVITY,
     PLAYER_JUMP_SPEED,
     PLAYER_MOVEMENT_SPEED,
@@ -73,17 +72,16 @@ class MyGame(arcade.Window):
         with get_tile_map_path("demo") as map_path:
             self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
 
-
         # Initialize Scene with our TileMap, this will automatically add all layers
         # from the map as SpriteLists in the scene in the proper order.
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         for spawner in self.scene.get_sprite_list("Spawners"):
-            id = spawner.properties["tile_id"]
-            if id == 0:
-                self.player =Player(spawner.bottom, spawner.left)
+            entity_id = spawner.properties["tile_id"]
+            if entity_id == 0:
+                self.player = Player(spawner.bottom, spawner.left)
                 self.scene.add_sprite("Player", self.player)
-            elif id == 1:
+            elif entity_id == 1:
                 self.scene.add_sprite("Enemy", DemoEnemy(spawner.bottom, spawner.left))
 
         self.scene.remove_sprite_list_by_name("Spawners")
