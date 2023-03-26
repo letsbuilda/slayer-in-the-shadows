@@ -163,12 +163,8 @@ class MyGame(arcade.Window):
 
     def center_camera_to_player(self):
         # Find where player is, then calculate lower left corner from that
-        screen_center_x = self.player.center_x - (
-            self.camera_sprites.viewport_width / 2
-        )
-        screen_center_y = self.player.center_y - (
-            self.camera_sprites.viewport_height / 2
-        )
+        screen_center_x = self.player.center_x - (self.camera_sprites.viewport_width / 2)
+        screen_center_y = self.player.center_y - (self.camera_sprites.viewport_height / 2)
 
         # Set some limits on how far we scroll
         if screen_center_x < 0:
