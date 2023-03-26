@@ -12,7 +12,7 @@ from .constants import (
     SCREEN_WIDTH,
     TILE_SCALING,
 )
-from .sprites.enemy import DemoEnemy
+from .sprites.enemy import Enemy
 from .sprites.player import Player
 
 
@@ -79,10 +79,10 @@ class MyGame(arcade.Window):
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left)
+                self.player = Player(spawner.bottom, spawner.left, "player/realistic_player", 100, 30, None)
                 self.scene.add_sprite("Player", self.player)
             elif entity_id == 1:
-                self.scene.add_sprite("Enemy", DemoEnemy(spawner.bottom, spawner.left))
+                self.scene.add_sprite("Enemy", Enemy(spawner.bottom, spawner.left, "enemies/realistic_enemy", 100, 20, None))
 
         self.scene.remove_sprite_list_by_name("Spawners")
 
