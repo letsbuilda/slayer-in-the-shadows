@@ -1,0 +1,53 @@
+[project]
+name = "pyweek-2023-03"
+version = "0.1.0"
+description = "Our entry to PyWeek March 2023"
+authors = [
+    { name = "Bradley Reynolds", email = "bradley.reynolds@darbia.dev" },
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "arcade==2.6.17",
+]
+
+[project.urls]
+repository = "https://github.com/letsbuilda/pyweek-2023-03/"
+documentation = "https://docs.letsbuilda.dev/pyweek-2023-03/"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "pylint",
+]
+tests = [
+    "pytest",
+]
+docs = [
+    "sphinx",
+    "furo",
+    "sphinx-autoapi",
+    "releases",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+tower = ["**/*.png", "**/*.tmx", "**/*.tsx"]
+
+[tool.black]
+target-version = ["py310"]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = "tests -r a -v --doctest-modules src"
+
+[tool.pylint.format]
+max-line-length = 120
