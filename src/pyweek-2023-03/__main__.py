@@ -1,182 +1,161 @@
 """Platformer Template"""
 
+from itertools import zip_longest
+
 import arcade
+import arcade.gui
 
-from .assets import get_tile_map_path
-from .constants import (
-    GRAVITY,
-    PLAYER_JUMP_SPEED,
-    PLAYER_MOVEMENT_SPEED,
-    SCREEN_HEIGHT,
-    SCREEN_TITLE,
-    SCREEN_WIDTH,
-    TILE_SCALING,
-)
-from .sprites.enemy import Enemy
-from .sprites.player import Player
+from .constants import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
+from .game_view import GameView
 
 
-class MyGame(arcade.Window):
-    """
-    Main application class.
-    """
+class StartView(arcade.View):
+    """Start view"""
 
     def __init__(self):
-        # Call the parent class and set up the window
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True)
+        super().__init__()
+        # Required for all code that uses UI element
+        # a UIManager to handle the UI
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
 
-        # Our TileMap Object
-        self.tile_map = None
+        self.v_box = arcade.gui.UIBoxLayout()
 
-        # Our Scene Object
-        self.scene = None
-
-        # Separate variable that holds the player sprite
-        self.player = None
-
-        # Our physics engine
-        self.physics_engine = None
-
-        # A Camera that can be used for scrolling the screen
-        self.camera_sprites = None
-
-        # A non-scrolling camera that can be used to draw GUI elements
-        self.camera_gui = None
-
-        # Keep track of the score
-        self.score = 0
-
-        # What key is pressed down?
-        self.left_key_down = False
-        self.right_key_down = False
-        self.shift_key_down = False
-
-
-    def setup(self):
-        """Set up the game here. Call this function to restart the game."""
-
-        # Setup the Cameras
-        self.camera_sprites = arcade.Camera(self.width, self.height)
-        self.camera_gui = arcade.Camera(self.width, self.height)
-
-        # Name of map file to load
-
-        # Layer specific options are defined based on Layer names in a dictionary
-        # Doing this will make the SpriteList for the platforms layer
-        # use spatial hashing for detection.
-        layer_options = {
-            "Blocks": {
-                "use_spatial_hash": True,
-            }
-        }
-
-        # Read in the tiled map
-        with get_tile_map_path("demo") as map_path:
-            self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
-
-        # Initialize Scene with our TileMap, this will automatically add all layers
-        # from the map as SpriteLists in the scene in the proper order.
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
-
-        for spawner in self.scene.get_sprite_list("Spawners"):
-            entity_id = spawner.properties["tile_id"]
-            if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left, "player/realistic_player", 100, 30, None, self)
-                self.scene.add_sprite("Player", self.player)
-            elif entity_id == 1:
-                self.scene.add_sprite("Enemy", Enemy(spawner.bottom, spawner.left, "enemies/realistic_enemy", 100, 20, None, self))
-
-        self.scene.remove_sprite_list_by_name("Spawners")
-
-        # Set the background color
-        if self.tile_map.background_color:
-            arcade.set_background_color(self.tile_map.background_color)
-
-        # Keep track of the score
-        self.score = 0
-
-        # --- Other stuff
-        # Create the 'physics engine'
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player, gravity_constant=GRAVITY, walls=self.scene["Blocks"]
+        self.title_text = arcade.Text(
+            "NINJA GAME",
+            self.window.width / 2,
+            self.window.height * 3 / 4,
+            arcade.color.WHITE,
+            font_size=50,
+            anchor_x="center",
         )
-        
-        self.player.setup_player()
+
+        # Make buttons
+        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200)
+        self.v_box.add(start_button.with_space_around(bottom=20))
+
+        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200)
+        self.v_box.add(settings_button.with_space_around(bottom=20))
+
+        quit_button = arcade.gui.UIFlatButton(text="Quit", width=200)
+        self.v_box.add(quit_button)
+
+        # Add functionality
+        @start_button.event("on_click")
+        def on_click_start(event):
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
+
+        @settings_button.event("on_click")
+        def on_click_settings(event):
+            settings_view = SettingsView()
+            self.window.show_view(settings_view)
+
+        @quit_button.event("on_click")
+        def on_click_quit(event):
+            arcade.exit()
+
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+
+    def on_show_view(self):
+        """This is run once when we switch to this view"""
+        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
+
+        # to reset the viewport back to the start so we can see what we draw.
+        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
     def on_draw(self):
-        """Render the screen."""
-
-        # Clear the screen to the background color
+        """Called when this view should draw"""
         self.clear()
+        self.title_text.draw()
+        self.manager.draw()
 
-        # Activate the game camera
-        self.camera_sprites.use()
 
-        # Draw our Scene
-        # Note, if you a want pixelated look, add pixelated=True to the parameters
-        self.scene.draw()
+class SettingsView(arcade.View):
+    """Settings view"""
 
-        # Activate the GUI camera before drawing GUI elements
-        self.camera_gui.use()
-        
-        self.player.update_animation()
+    def __init__(self):
+        super().__init__()
+        # Required for all code that uses UI element
+        # a UIManager to handle the UI
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
 
-        # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Score: {self.score}"
-        arcade.draw_text(
-            score_text,
-            start_x=10,
-            start_y=10,
-            color=arcade.csscolor.WHITE,
-            font_size=18,
-        )
+        self.v_box = arcade.gui.UIBoxLayout()
 
-    def update_player_speed(self):
-        # Calculate speed based on the keys pressed
-        self.player.update_player_speed()
+        self.fs_button = arcade.gui.UIFlatButton(text="Make fullscreen", width=200)
+        self.v_box.add(self.fs_button.with_space_around(bottom=20))
 
-    def on_key_press(self, key, modifiers):
-        """Called whenever a key is pressed."""
-        self.player.on_key_press(key, modifiers)
+        # IDK what this is meant to do so this is just placeholder for now
+        self.audio_button = arcade.gui.UIFlatButton(text="Audio button", width=200)
+        self.v_box.add(self.audio_button.with_space_around(bottom=20))
 
-    def on_key_release(self, key, modifiers):
-        """Called when the user releases a key."""
-        self.player.on_key_release(key, modifiers)
+        keys = [
+            ("Jump", "W", "UP_ARROW"),
+            ("Left ", "L", "LEFT_ARROW"),
+            ("Right", "R", "RIGHT_ARROW"),
+            ("Dash", "SHIFT"),
+        ]
+        # for function, *keys in [
+        #     ('Jump', 'W', 'UP_ARROW'),
+        #     ('Left ', 'L', 'LEFT_ARROW'),
+        #     ('Right', 'R', 'RIGHT_ARROW'),
+        #     ('Dash', 'SHIFT')
+        # ]:
+        #     key_box = arcade.gui.UIBoxLayout(vertical=False)
+        #     key_box.add(arcade.gui.UILabel(text=function, size_hint=0.8, font_size=30, text_color=arcade.color.BLACK)
+        #                 .with_space_around(left=10, right=10))
+        #     for key, _ in zip_longest(keys, range(2), fillvalue=''):
+        #         key_box.add(arcade.gui.UIFlatButton(text=key, size_hint=0.1).with_space_around(left=10, right=10))
+        #     self.v_box.add(key_box.with_space_around(bottom=20))
+        actions, *keybinds = zip_longest(*keys, fillvalue="")
+        key_box = arcade.gui.UIBoxLayout(vertical=False)
+        # Action box
+        action_box = arcade.gui.UIBoxLayout(size_hint=0.8)
+        for action in actions:
+            action_box.add(
+                arcade.gui.UILabel(text=action, font_size=30, text_color=arcade.color.BLACK).with_space_around(
+                    bottom=20
+                )
+            )
+        key_box.add(action_box.with_space_around(left=10, right=10))
 
-    def center_camera_to_player(self):
-        # Find where player is, then calculate lower left corner from that
-        screen_center_x = self.player.center_x - (self.camera_sprites.viewport_width / 2)
-        screen_center_y = self.player.center_y - (self.camera_sprites.viewport_height / 2)
+        # Keybinds
+        # Need to add actual functionality to switch keybinds later
+        for column in keybinds:
+            column_box = arcade.gui.UIBoxLayout(size_hint=0.1)
+            for keybind in column:
+                column_box.add(arcade.gui.UIFlatButton(text=keybind, width=200).with_space_around(bottom=20))
+            key_box.add(column_box.with_space_around(left=10, right=10))
 
-        # Set some limits on how far we scroll
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
+        self.v_box.add(key_box.with_space_around(bottom=20))
 
-        # Here's our center, move to it
-        player_centered = screen_center_x, screen_center_y
-        self.camera_sprites.move_to(player_centered)
+        @self.fs_button.event("on_click")
+        def on_flip_fullscreen(event):
+            self.window.set_fullscreen(not self.window.fullscreen)
+            self.fs_button.text = ({self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}).pop()
 
-    def on_update(self, delta_time):
-        """Movement and game logic"""
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
 
-        # Move the player with the physics engine
-        self.physics_engine.update()
+    def on_show_view(self):
+        """This is run once when we switch to this view"""
+        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
-        # Position the camera
-        self.center_camera_to_player()
+        # to reset the viewport back to the start so we can see what we draw.
+        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
-    def on_resize(self, width, height):
-        """Resize window"""
-        self.camera_sprites.resize(int(width), int(height))
-        self.camera_gui.resize(int(width), int(height))
+    def on_draw(self):
+        """Called when this view should draw"""
+        self.clear()
+        self.manager.draw()
 
 
 def main():
     """Main function"""
-    window = MyGame()
-    window.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True)
+    start_view = StartView()
+    window.show_view(start_view)
     arcade.run()
 
 
