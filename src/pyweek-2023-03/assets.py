@@ -23,11 +23,9 @@ def get_tile_map_path(name: str):
     """Gets the path for a tile map"""
     return get_asset_path("levels", f"{name}.tmx")
 
+
 def load_texture_pair(filename):
     """
     Load a texture pair, with the second being a mirror image.
     """
-    return [
-        arcade.load_texture(filename),
-        arcade.load_texture(filename, flipped_horizontally=True)
-    ]
+    return [arcade.load_texture(filename), arcade.load_texture(filename, flipped_horizontally=True)]
