@@ -93,7 +93,7 @@ class SettingsView(arcade.View):
         self.v_box.add(self.audio_button.with_space_around(bottom=20))
 
         keys = [
-            ("Jump", "W", "UP_ARROW"),
+            ("Jump", "W", "UP_ARROW", "SPACE"),
             ("Left ", "L", "LEFT_ARROW"),
             ("Right", "R", "RIGHT_ARROW"),
             ("Dash", "SHIFT"),
