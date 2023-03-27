@@ -42,19 +42,19 @@ class StartView(arcade.View):
 
         # Add functionality
         @start_button.event("on_click")
-        def on_click_start():
+        def on_click_start(event):
             game_view = GameView()
             game_view.setup()
             self.window.show_view(game_view)
 
         @settings_button.event("on_click")
-        def on_click_settings():
+        def on_click_settings(event):
             self.manager.disable()
             settings_view = SettingsView()
             self.window.show_view(settings_view)
 
         @quit_button.event("on_click")
-        def on_click_quit():
+        def on_click_quit(event):
             arcade.exit()
 
         self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
@@ -121,7 +121,7 @@ class SettingsView(arcade.View):
         self.v_box.add(key_box.with_space_around(bottom=20))
 
         @self.fs_button.event("on_click")
-        def on_flip_fullscreen():
+        def on_flip_fullscreen(event):
             self.window.set_fullscreen(not self.window.fullscreen)
             self.fs_button.text = ({self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}).pop()
 
@@ -131,7 +131,7 @@ class SettingsView(arcade.View):
         self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="left", anchor_y="top", child=return_button))
 
         @return_button.event("on_click")
-        def on_click_return():
+        def on_click_return(event):
             self.manager.disable()
             start_view = StartView()
             self.window.show_view(start_view)

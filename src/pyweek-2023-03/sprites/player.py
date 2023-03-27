@@ -25,6 +25,9 @@ class Player(Character):
         self.dashes = 1
         self.can_dash = True
 
+        self.change_x = 0
+        self.change_y = 0
+
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
 
