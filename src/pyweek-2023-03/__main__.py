@@ -49,6 +49,7 @@ class StartView(arcade.View):
 
         @settings_button.event("on_click")
         def on_click_settings(event):
+            self.manager.disable()
             settings_view = SettingsView()
             self.window.show_view(settings_view)
 
@@ -97,18 +98,6 @@ class SettingsView(arcade.View):
             ("Right", "R", "RIGHT_ARROW"),
             ("Dash", "SHIFT"),
         ]
-        # for function, *keys in [
-        #     ('Jump', 'W', 'UP_ARROW'),
-        #     ('Left ', 'L', 'LEFT_ARROW'),
-        #     ('Right', 'R', 'RIGHT_ARROW'),
-        #     ('Dash', 'SHIFT')
-        # ]:
-        #     key_box = arcade.gui.UIBoxLayout(vertical=False)
-        #     key_box.add(arcade.gui.UILabel(text=function, size_hint=0.8, font_size=30, text_color=arcade.color.BLACK)
-        #                 .with_space_around(left=10, right=10))
-        #     for key, _ in zip_longest(keys, range(2), fillvalue=''):
-        #         key_box.add(arcade.gui.UIFlatButton(text=key, size_hint=0.1).with_space_around(left=10, right=10))
-        #     self.v_box.add(key_box.with_space_around(bottom=20))
         actions, *keybinds = zip_longest(*keys, fillvalue="")
         key_box = arcade.gui.UIBoxLayout(vertical=False)
         # Action box
@@ -137,6 +126,15 @@ class SettingsView(arcade.View):
             self.fs_button.text = ({self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}).pop()
 
         self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+
+        return_button = arcade.gui.UIFlatButton(text="<-", width=100)
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="left", anchor_y="top", child=return_button))
+
+        @return_button.event("on_click")
+        def on_click_return(event):
+            self.manager.disable()
+            start_view = StartView()
+            self.window.show_view(start_view)
 
     def on_show_view(self):
         """This is run once when we switch to this view"""
