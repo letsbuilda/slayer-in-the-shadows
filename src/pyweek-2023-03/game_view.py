@@ -1,6 +1,5 @@
 """Game View"""
 
-from importlib.resources import as_file
 
 import arcade
 
@@ -10,6 +9,7 @@ from .sprites.enemy import Enemy
 from .sprites.player import Player
 
 
+# pylint: disable=too-many-instance-attributes
 class GameView(arcade.View):
     """Main application class."""
 
@@ -129,27 +129,26 @@ class GameView(arcade.View):
         )
 
     def update_player_speed(self):
-        # Calculate speed based on the keys pressed
+        """Calculate speed based on the keys pressed"""
         self.player.update_player_speed()
 
-    def on_key_press(self, key, modifiers):
+    def on_key_press(self, symbol, modifiers):
         """Called whenever a key is pressed."""
-        self.player.on_key_press(key, modifiers)
+        self.player.on_key_press(symbol)
 
-    def on_key_release(self, key, modifiers):
+    def on_key_release(self, symbol, modifiers):
         """Called when the user releases a key."""
-        self.player.on_key_release(key, modifiers)
+        self.player.on_key_release(symbol)
 
     def center_camera_to_player(self):
+        """Centers the camera to the player"""
         # Find where player is, then calculate lower left corner from that
         screen_center_x = self.player.center_x - (self.camera_sprites.viewport_width / 2)
         screen_center_y = self.player.center_y - (self.camera_sprites.viewport_height / 2)
 
         # Set some limits on how far we scroll
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
+        screen_center_x = max(screen_center_x, 0)
+        screen_center_y = max(screen_center_y, 0)
 
         # Here's our center, move to it
         player_centered = screen_center_x, screen_center_y

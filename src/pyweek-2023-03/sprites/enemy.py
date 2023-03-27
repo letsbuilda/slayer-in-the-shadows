@@ -1,10 +1,6 @@
 """Classes for the various enemy types"""
 
-import arcade
-
-from .. import constants
-from ..assets import get_sprite_path
-from ..sprites.character import Character
+from .character import Character
 
 
 class Enemy(Character):
