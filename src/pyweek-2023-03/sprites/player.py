@@ -49,7 +49,8 @@ class Player(Character):
         """ Reset dash after 1 second """
         print("resetting dash")
         time.sleep(1)
-        self.dashes = 1
+        if self.dashes < 1:
+            self.dashes += 1
         print("dash reset")
             
     def on_key_press(self, key, modifiers):
