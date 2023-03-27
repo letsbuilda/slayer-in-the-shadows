@@ -11,7 +11,11 @@ class Player(arcade.Sprite):
 
     def __init__(self, bottom, left):
         with get_sprite_path("player", "realistic_player") as sprite_path:
-            super().__init__(sprite_path, constants.CHARACTER_SCALING)
+            super().__init__(
+                sprite_path,
+                constants.CHARACTER_SCALING,
+                hit_box_algorithm="Detailed",
+            )
 
         self.bottom = bottom
         self.left = left

@@ -4,9 +4,15 @@ import arcade
 
 from .assets import get_tile_map_path
 from .constants import (
+    DEFAULT_DAMPING,
     GRAVITY,
-    PLAYER_JUMP_SPEED,
-    PLAYER_MOVEMENT_SPEED,
+    PLAYER_FRICTION,
+    PLAYER_JUMP_IMPULSE,
+    PLAYER_MASS,
+    PLAYER_MAX_HORIZONTAL_SPEED,
+    PLAYER_MAX_VERTICAL_SPEED,
+    PLAYER_MOVE_FORCE_IN_AIR,
+    PLAYER_MOVE_FORCE_ON_GROUND,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
     SCREEN_WIDTH,
@@ -23,7 +29,9 @@ class MyGame(arcade.Window):
 
     def __init__(self):
         # Call the parent class and set up the window
-        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True)
+        super().__init__(
+            SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True
+        )
 
         # Our TileMap Object
         self.tile_map = None
@@ -47,6 +55,7 @@ class MyGame(arcade.Window):
         self.score = 0
 
         # What key is pressed down?
+        self.up_key_down = False
         self.left_key_down = False
         self.right_key_down = False
 
@@ -70,7 +79,9 @@ class MyGame(arcade.Window):
 
         # Read in the tiled map
         with get_tile_map_path("demo") as map_path:
-            self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
+            self.tile_map = arcade.load_tilemap(
+                map_path, TILE_SCALING, layer_options
+            )
 
         # Initialize Scene with our TileMap, this will automatically add all layers
         # from the map as SpriteLists in the scene in the proper order.
@@ -82,7 +93,9 @@ class MyGame(arcade.Window):
                 self.player = Player(spawner.bottom, spawner.left)
                 self.scene.add_sprite("Player", self.player)
             elif entity_id == 1:
-                self.scene.add_sprite("Enemy", DemoEnemy(spawner.bottom, spawner.left))
+                self.scene.add_sprite(
+                    "Enemy", DemoEnemy(spawner.bottom, spawner.left)
+                )
 
         self.scene.remove_sprite_list_by_name("Spawners")
 
@@ -95,8 +108,29 @@ class MyGame(arcade.Window):
 
         # --- Other stuff
         # Create the 'physics engine'
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player, gravity_constant=GRAVITY, walls=self.scene["Blocks"]
+        self.physics_engine = arcade.PymunkPhysicsEngine(
+            (0, -GRAVITY), damping=DEFAULT_DAMPING
+        )
+        self.physics_engine.add_sprite(
+            self.player,
+            friction=PLAYER_FRICTION,
+            mass=PLAYER_MASS,
+            moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
+            collision_type="player",
+            max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
+            max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
+        )
+        self.physics_engine.add_sprite_list(
+            self.scene["Enemy"],
+            friction=PLAYER_FRICTION,
+            mass=PLAYER_MASS,
+            collision_type="player",
+        )
+        self.physics_engine.add_sprite_list(
+            self.scene["Blocks"],
+            body_type=1,
+            friction=1,
+            damping=DEFAULT_DAMPING,
         )
 
     def on_draw(self):
@@ -109,7 +143,7 @@ class MyGame(arcade.Window):
         self.camera_sprites.use()
 
         # Draw our Scene
-        # Note, if you a want pixelated look, add pixelated=True to the parameters
+        # Note, if you want pixelated look, add pixelated=True to the parameters
         self.scene.draw()
 
         # Activate the GUI camera before drawing GUI elements
@@ -127,20 +161,42 @@ class MyGame(arcade.Window):
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
-        self.player.change_x = 0
 
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
+        # Update player forces based on keys pressed
         if self.left_key_down and not self.right_key_down:
-            self.player.change_x = -PLAYER_MOVEMENT_SPEED
+            # Create a force to the left. Apply it.
+            if is_on_ground:
+                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
+
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+
         elif self.right_key_down and not self.left_key_down:
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+            # Create a force to the right. Apply it.
+            if is_on_ground:
+                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
+
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+        else:
+            # Player's feet are not moving. Therefore, up the friction so we stop.
+            self.physics_engine.set_friction(self.player, 1.0)
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
-        # Jump
+        # Jumpd
         if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.can_jump():
-                self.player.change_y = PLAYER_JUMP_SPEED
+            if self.physics_engine.is_on_ground(self.player):
+                impulse = (0, PLAYER_JUMP_IMPULSE)
+                self.physics_engine.apply_impulse(self.player, impulse)
 
         # Left
         elif key == arcade.key.LEFT or key == arcade.key.A:
@@ -156,15 +212,19 @@ class MyGame(arcade.Window):
         """Called when the user releases a key."""
         if key == arcade.key.LEFT or key == arcade.key.A:
             self.left_key_down = False
-            self.update_player_speed()
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_key_down = False
-            self.update_player_speed()
+        elif key == arcade.key.UP or key == arcade.key.W:
+            self.up_key_down = False
 
     def center_camera_to_player(self):
         # Find where player is, then calculate lower left corner from that
-        screen_center_x = self.player.center_x - (self.camera_sprites.viewport_width / 2)
-        screen_center_y = self.player.center_y - (self.camera_sprites.viewport_height / 2)
+        screen_center_x = self.player.center_x - (
+            self.camera_sprites.viewport_width / 2
+        )
+        screen_center_y = self.player.center_y - (
+            self.camera_sprites.viewport_height / 2
+        )
 
         # Set some limits on how far we scroll
         if screen_center_x < 0:
@@ -179,11 +239,15 @@ class MyGame(arcade.Window):
     def on_update(self, delta_time):
         """Movement and game logic"""
 
-        # Move the player with the physics engine
-        self.physics_engine.update()
+        self.physics_engine.step()
 
         # Position the camera
         self.center_camera_to_player()
+
+        # Update everything in the scene
+        self.scene.on_update()
+
+        self.update_player_speed()
 
     def on_resize(self, width, height):
         """Resize window"""
