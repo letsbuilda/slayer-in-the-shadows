@@ -12,7 +12,7 @@ from .constants import (
     SCREEN_WIDTH,
     TILE_SCALING,
 )
-from .sprites.enemy import DemoEnemy
+from .sprites.enemy import Enemy
 from .sprites.player import Player
 
 
@@ -49,6 +49,8 @@ class MyGame(arcade.Window):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
+        self.shift_key_down = False
+
 
     def setup(self):
         """Set up the game here. Call this function to restart the game."""
@@ -79,10 +81,10 @@ class MyGame(arcade.Window):
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left)
+                self.player = Player(spawner.bottom, spawner.left, "player/realistic_player", 100, 30, None, self)
                 self.scene.add_sprite("Player", self.player)
             elif entity_id == 1:
-                self.scene.add_sprite("Enemy", DemoEnemy(spawner.bottom, spawner.left))
+                self.scene.add_sprite("Enemy", Enemy(spawner.bottom, spawner.left, "enemies/realistic_enemy", 100, 20, None, self))
 
         self.scene.remove_sprite_list_by_name("Spawners")
 
@@ -98,6 +100,8 @@ class MyGame(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player, gravity_constant=GRAVITY, walls=self.scene["Blocks"]
         )
+        
+        self.player.setup_player()
 
     def on_draw(self):
         """Render the screen."""
@@ -114,6 +118,8 @@ class MyGame(arcade.Window):
 
         # Activate the GUI camera before drawing GUI elements
         self.camera_gui.use()
+        
+        self.player.update_animation()
 
         # Draw our score on the screen, scrolling it with the viewport
         score_text = f"Score: {self.score}"
@@ -127,39 +133,15 @@ class MyGame(arcade.Window):
 
     def update_player_speed(self):
         # Calculate speed based on the keys pressed
-        self.player.change_x = 0
-
-        if self.left_key_down and not self.right_key_down:
-            self.player.change_x = -PLAYER_MOVEMENT_SPEED
-        elif self.right_key_down and not self.left_key_down:
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+        self.player.update_player_speed()
 
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
-
-        # Jump
-        if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.can_jump():
-                self.player.change_y = PLAYER_JUMP_SPEED
-
-        # Left
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_key_down = True
-            self.update_player_speed()
-
-        # Right
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_key_down = True
-            self.update_player_speed()
+        self.player.on_key_press(key, modifiers)
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
-        if key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_key_down = False
-            self.update_player_speed()
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_key_down = False
-            self.update_player_speed()
+        self.player.on_key_release(key, modifiers)
 
     def center_camera_to_player(self):
         # Find where player is, then calculate lower left corner from that

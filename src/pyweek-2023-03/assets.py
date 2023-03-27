@@ -2,6 +2,8 @@
 
 from importlib.resources import as_file, files
 
+import arcade
+
 
 def get_asset_path(*paths: str):
     """Gets the path for an asset"""
@@ -20,3 +22,12 @@ def get_sprite_path(parent: str, name: str):
 def get_tile_map_path(name: str):
     """Gets the path for a tile map"""
     return get_asset_path("levels", f"{name}.tmx")
+
+def load_texture_pair(filename):
+    """
+    Load a texture pair, with the second being a mirror image.
+    """
+    return [
+        arcade.load_texture(filename),
+        arcade.load_texture(filename, flipped_horizontally=True)
+    ]
