@@ -18,6 +18,7 @@ from .constants import (
     SCREEN_WIDTH,
     TILE_SCALING,
 )
+from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
 from .sprites.player import Player
 
@@ -104,10 +105,16 @@ class MyGame(arcade.Window):
                     friction=PLAYER_FRICTION,
                     mass=PLAYER_MASS,
                     moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
-                    collision_type="player",
+                    collision_type="enemy",
                     damping=1.0,
                     max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
                     max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
+                )
+
+                self.physics_engine.add_collision_handler(
+                    "player",
+                    "enemy",
+                    player_hits_enemy,
                 )
 
         self.scene.remove_sprite_list_by_name("Spawners")
@@ -134,6 +141,7 @@ class MyGame(arcade.Window):
             body_type=1,
             friction=1,
             damping=DEFAULT_DAMPING,
+            collision_type="block",
         )
 
     def on_draw(self):
@@ -252,6 +260,11 @@ class MyGame(arcade.Window):
         self.scene.on_update()
 
         for enemy in self.scene["Enemy"]:
+            if enemy.mode == 1:
+                enemy.target_position = self.player.left, self.player.bottom
+                enemy.moving = True
+                x = self.player.left - enemy.left
+                enemy.direction = abs(x) / x
             if enemy.moving:
                 if self.physics_engine.is_on_ground(enemy):
                     force = (7_000 * enemy.direction, 0)
@@ -260,11 +273,17 @@ class MyGame(arcade.Window):
                 self.physics_engine.set_friction(enemy, 0)
                 self.physics_engine.apply_force(enemy, force)
 
+                if enemy.target_position[1] > enemy.position[
+                    1
+                ] and self.physics_engine.is_on_ground(enemy):
+                    impulse = (0, PLAYER_JUMP_IMPULSE)
+                    self.physics_engine.apply_impulse(enemy, impulse)
+
                 if enemy.direction == 1:
                     cond = enemy.position[0] > enemy.target_position[0]
                 else:
                     cond = enemy.position[0] < enemy.target_position[0]
-                if cond:
+                if cond and enemy.mode != 1:
                     self.physics_engine.set_friction(enemy, 1.0)
                     enemy.cur_movement_cd = enemy.movement_cd
                     enemy.moving = False

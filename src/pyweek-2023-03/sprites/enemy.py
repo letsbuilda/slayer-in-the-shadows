@@ -5,7 +5,7 @@ from random import choice, randint
 import arcade
 
 from .. import constants
-from ..assets import get_sprite_path
+from ..assets import get_asset_path, get_sprite_path
 
 
 class Enemy(arcade.Sprite):
@@ -34,16 +34,32 @@ class Enemy(arcade.Sprite):
 
         self.available_spaces = []
 
+        # The actins an enemy will do.
+        # Mode 0 is passive, the enemy wanders around the platform.
+        # Mode 1 is attack, the enemy charges the player.
+        self.mode = 0
+
+        with get_asset_path("sounds", "enemy_notices.wav") as path:
+            self.alert_sound = arcade.load_sound(path)
+
     def on_update(self, delta_time: float = 1 / 60):
         self.update_position(delta_time)
 
     def update_position(self, delta_time: float):
-        if self.cur_movement_cd >= 0:
-            self.cur_movement_cd -= delta_time
-        else:
-            self.target_position = self.find_new_spot()
-            self.moving = True
-            self.cur_movement_cd = self.movement_cd
+        if self.mode == 0:
+            if self.cur_movement_cd >= 0:
+                self.cur_movement_cd -= delta_time
+            else:
+                self.target_position = self.find_new_spot()
+                self.moving = True
+                self.cur_movement_cd = self.movement_cd
+
+    def notice_player(self):
+        """The enemy has detected the player and will now attack."""
+
+        self.mode = 1
+        self.alert_sound.play()
+        self.moving = True
 
     def find_new_spot(self):
         """Finds a new spot for the enemy to stand on when it is passive."""
