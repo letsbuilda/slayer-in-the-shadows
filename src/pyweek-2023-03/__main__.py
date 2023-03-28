@@ -66,7 +66,10 @@ class MyGame(arcade.Window):
         self.camera_sprites = arcade.Camera(self.width, self.height)
         self.camera_gui = arcade.Camera(self.width, self.height)
 
-        # Name of map file to load
+        # Create the 'physics engine'
+        self.physics_engine = arcade.PymunkPhysicsEngine(
+            (0, -GRAVITY), damping=DEFAULT_DAMPING
+        )
 
         # Layer specific options are defined based on Layer names in a dictionary
         # Doing this will make the SpriteList for the platforms layer
@@ -93,8 +96,18 @@ class MyGame(arcade.Window):
                 self.player = Player(spawner.bottom, spawner.left)
                 self.scene.add_sprite("Player", self.player)
             elif entity_id == 1:
-                self.scene.add_sprite(
-                    "Enemy", DemoEnemy(spawner.bottom, spawner.left)
+                enemy = DemoEnemy(spawner.bottom, spawner.left)
+                enemy.generate_available_spaces(self.scene["Blocks"])
+                self.scene.add_sprite("Enemy", enemy)
+                self.physics_engine.add_sprite(
+                    enemy,
+                    friction=PLAYER_FRICTION,
+                    mass=PLAYER_MASS,
+                    moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
+                    collision_type="player",
+                    damping=1.0,
+                    max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
+                    max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
                 )
 
         self.scene.remove_sprite_list_by_name("Spawners")
@@ -106,11 +119,6 @@ class MyGame(arcade.Window):
         # Keep track of the score
         self.score = 0
 
-        # --- Other stuff
-        # Create the 'physics engine'
-        self.physics_engine = arcade.PymunkPhysicsEngine(
-            (0, -GRAVITY), damping=DEFAULT_DAMPING
-        )
         self.physics_engine.add_sprite(
             self.player,
             friction=PLAYER_FRICTION,
@@ -120,12 +128,7 @@ class MyGame(arcade.Window):
             max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
             max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
         )
-        self.physics_engine.add_sprite_list(
-            self.scene["Enemy"],
-            friction=PLAYER_FRICTION,
-            mass=PLAYER_MASS,
-            collision_type="player",
-        )
+
         self.physics_engine.add_sprite_list(
             self.scene["Blocks"],
             body_type=1,
@@ -192,7 +195,7 @@ class MyGame(arcade.Window):
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
-        # Jumpd
+        # Jump
         if key == arcade.key.UP or key == arcade.key.W:
             if self.physics_engine.is_on_ground(self.player):
                 impulse = (0, PLAYER_JUMP_IMPULSE)
@@ -206,7 +209,6 @@ class MyGame(arcade.Window):
         # Right
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right_key_down = True
-            self.update_player_speed()
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
@@ -244,10 +246,28 @@ class MyGame(arcade.Window):
         # Position the camera
         self.center_camera_to_player()
 
+        self.update_player_speed()
+
         # Update everything in the scene
         self.scene.on_update()
 
-        self.update_player_speed()
+        for enemy in self.scene["Enemy"]:
+            if enemy.moving:
+                if self.physics_engine.is_on_ground(enemy):
+                    force = (7_000 * enemy.direction, 0)
+                else:
+                    force = (1_000 * enemy.direction, 0)
+                self.physics_engine.set_friction(enemy, 0)
+                self.physics_engine.apply_force(enemy, force)
+
+                if enemy.direction == 1:
+                    cond = enemy.position[0] > enemy.target_position[0]
+                else:
+                    cond = enemy.position[0] < enemy.target_position[0]
+                if cond:
+                    self.physics_engine.set_friction(enemy, 1.0)
+                    enemy.cur_movement_cd = enemy.movement_cd
+                    enemy.moving = False
 
     def on_resize(self, width, height):
         """Resize window"""
