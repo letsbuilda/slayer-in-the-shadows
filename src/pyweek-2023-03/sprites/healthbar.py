@@ -27,5 +27,5 @@ class HealthBar:
         """Updates health bar position. (May impact performance)"""
         self.border_bar.bottom = self.character.top + self.offset - self.border
         self.fill_bar.bottom = self.character.top + self.offset
-        self.border_bar.center_x = self.character.center_x
-        self.fill_bar.center_x = self.character.center_x
+        self.border_bar.left = self.character.left - (self.fill_bar_width/4) + self.border
+        self.fill_bar.left = self.character.left - (self.fill_bar_width/4)
