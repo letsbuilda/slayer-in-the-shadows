@@ -3,6 +3,7 @@ import arcade
 
 from .. import constants
 from ..assets import get_sprite_path
+from .healthbar import HealthBar
 
 
 class Character(arcade.Sprite):
@@ -19,7 +20,19 @@ class Character(arcade.Sprite):
         self.left = left
 
         self.health = health
+        self.max_health = health
         self.speed = speed
         self.weapon = weapon
 
         self.game = game
+
+        self.health_bar = HealthBar(self)
+
+    def take_damage(self, damage: int):
+        """Changes health bar"""
+        self.health -= damage
+        self.health_bar.update_health()
+
+    def update(self):
+        """Helper"""
+        self.health_bar.update()

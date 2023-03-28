@@ -55,7 +55,7 @@ class Player(Character):
 
     async def reset_dash(self):
         """Reset dash after 1 second"""
-        asyncio.sleep(1)
+        await asyncio.sleep(1)
         self.dashes = 1
 
     def on_key_press(self, key):

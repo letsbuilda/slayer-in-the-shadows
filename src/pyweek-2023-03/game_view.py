@@ -73,6 +73,8 @@ class GameView(arcade.View):
         # from the map as SpriteLists in the scene in the proper order.
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
+        self.scene.add_sprite_list("Bars")
+
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
@@ -162,6 +164,9 @@ class GameView(arcade.View):
 
         # Position the camera
         self.center_camera_to_player()
+
+        self.player.update()
+        self.scene.get_sprite_list("Enemy").update()
 
     def on_resize(self, width, height):
         """Resize window"""
