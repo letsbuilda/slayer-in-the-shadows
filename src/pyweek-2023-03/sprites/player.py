@@ -1,9 +1,7 @@
 """The player"""
 
-import time
-import arcade
 import threading
-
+import time
 
 import arcade
 
@@ -59,13 +57,13 @@ class Player(Character):
                 self.change_x = PLAYER_MOVEMENT_SPEED
 
     def reset_dash(self):
-        """ Reset dash after 1 second """
+        """Reset dash after 1 second"""
         print("resetting dash")
         time.sleep(1)
         if self.dashes < 1:
             self.dashes += 1
         print("dash reset")
-            
+
     def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
