@@ -260,11 +260,16 @@ class MyGame(arcade.Window):
         self.scene.on_update()
 
         for enemy in self.scene["Enemy"]:
+            if enemy.look_for(self.player, self.scene["Blocks"]):
+                enemy.notice_player()
+                enemy.target_position = self.player.left, self.player.bottom
+
             if enemy.mode == 1:
                 enemy.target_position = self.player.left, self.player.bottom
                 enemy.moving = True
                 x = self.player.left - enemy.left
                 enemy.direction = abs(x) / x
+
             if enemy.moving:
                 if self.physics_engine.is_on_ground(enemy):
                     force = (7_000 * enemy.direction, 0)

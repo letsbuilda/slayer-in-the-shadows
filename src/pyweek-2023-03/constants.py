@@ -16,6 +16,9 @@ GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
 PLAYER_MOVEMENT_SPEED = 10
 PLAYER_JUMP_SPEED = 20
 
+ENEMY_RENDER_DISTANCE = 500
+ENEMY_FOV = 0.4
+
 # --- Physics forces. Higher number, faster accelerating.
 
 # Gravity
