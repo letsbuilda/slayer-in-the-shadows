@@ -82,7 +82,7 @@ class MyGame(arcade.Window):
         }
 
         # Read in the tiled map
-        with get_tile_map_path("demo") as map_path:
+        with get_tile_map_path("inf_demo") as map_path:
             self.tile_map = arcade.load_tilemap(
                 map_path, TILE_SCALING, layer_options
             )
