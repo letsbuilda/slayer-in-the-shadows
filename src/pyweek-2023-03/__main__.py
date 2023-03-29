@@ -63,7 +63,7 @@ class StartView(arcade.View):
         """This is run once when we switch to this view"""
         arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
-        # to reset the viewport back to the start so we can see what we draw.
+        # to reset the viewport back to the start, so we can see what we draw.
         arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
     def on_draw(self):
