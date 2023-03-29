@@ -9,7 +9,7 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, sprite: str, health: int, speed: int, weapon, game):
-        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Simple")
+        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
         self.dashes = None
         self.dash_cooldown = None
         self.is_facing_right = None
