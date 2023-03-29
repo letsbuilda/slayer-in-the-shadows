@@ -19,10 +19,8 @@ from .constants import (
     TILE_SCALING,
 )
 from .handlers import player_hits_enemy
-from .sprites.enemy import DemoEnemy, Enemy
+from .sprites.enemy import DemoEnemy
 from .sprites.player import Player
-
-c = 0
 
 
 # pylint: disable=too-many-instance-attributes
@@ -202,26 +200,27 @@ class GameView(arcade.View):
             # Player's feet are not moving. Therefore, up the friction so we stop.
             self.physics_engine.set_friction(self.player, 1.0)
 
-    def on_key_press(self, key, modifiers):
+    def on_key_press(self, symbol, modifiers):
         """Called whenever a key is pressed."""
-        if key in KEYMAP_DICT["Jump"]:
+        if symbol in KEYMAP_DICT["Jump"]:
             if self.physics_engine.is_on_ground(self.player):
                 impulse = (0, PLAYER_JUMP_IMPULSE)
                 self.physics_engine.apply_impulse(self.player, impulse)
             self.update_player_speed()
-        elif key in KEYMAP_DICT["Left"]:
+        elif symbol in KEYMAP_DICT["Left"]:
             self.left_key_down = True
             self.update_player_speed()
-        elif key in KEYMAP_DICT["Right"]:
+        elif symbol in KEYMAP_DICT["Right"]:
             self.right_key_down = True
             self.update_player_speed()
-        elif key in KEYMAP_DICT["Dash"]:
+        elif symbol in KEYMAP_DICT["Dash"]:
             if self.player.dashes:
                 impulse = (DASH_MOVE_IMPULSE, 0) if self.player.is_facing_right else (-DASH_MOVE_IMPULSE, 0)
                 self.physics_engine.apply_impulse(self.player, impulse)
                 self.player.use_dash()
                 self.update_player_speed()
 
+    # pylint: disable=unused-argument
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
         if key in KEYMAP_DICT["Left"]:
@@ -246,6 +245,7 @@ class GameView(arcade.View):
         self.camera_sprites.move_to(player_centered)
 
     def update_enemies(self):
+        """Updates enemies"""
         for enemy in self.scene["Enemy"]:
             if enemy.look_for(self.player, self.scene["Blocks"]):
                 enemy.notice_player()
@@ -254,8 +254,8 @@ class GameView(arcade.View):
             if enemy.mode == 1:
                 enemy.target_position = self.player.left, self.player.bottom
                 enemy.moving = True
-                x = self.player.left - enemy.left
-                enemy.direction = abs(x) / x
+                pos_x = self.player.left - enemy.left
+                enemy.direction = abs(pos_x) / pos_x
 
             if enemy.moving:
                 if self.physics_engine.is_on_ground(enemy):

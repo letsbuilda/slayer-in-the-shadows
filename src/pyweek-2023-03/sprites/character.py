@@ -1,6 +1,7 @@
 """Character class from"""
 import arcade
 
+# pylint: disable=no-name-in-module
 from .. import constants
 from ..assets import get_sprite_path
 

@@ -9,10 +9,12 @@ from ..assets import get_asset_path, get_sprite_path
 from .character import Character
 
 
+# pylint: disable=too-many-instance-attributes
 class Enemy(Character):
     """Base enemy class from which the various enemy types are made"""
 
-    def __init__(self, bottom, left, sprite, health: int, speed: int, weapon, game):
+    # pylint: disable=too-many-arguments
+    def __init__(self, bottom: float, left: float, sprite: str, health: int, speed: int, weapon, game):
         super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
 
         # Time (in seconds) until the enemy moves again
@@ -27,7 +29,7 @@ class Enemy(Character):
 
         self.available_spaces = []
 
-        # The actins an enemy will do.
+        # The actions an enemy will do.
         # Mode 0 is passive, the enemy wanders around the platform.
         # Mode 1 is attack, the enemy charges the player.
         self.mode = 0
@@ -59,24 +61,9 @@ class Enemy(Character):
 
         if self.mode == 0:
             # Find if there is any blocks between the enemy and the player
-            space_clear = True
-            for blk in blocks:
-                # Check if the block is between the enemy and the player
-                if (
-                    self.center_x < blk.center_x < player.center_x or self.center_x > blk.center_x > player.center_x
-                ) and (
-                    self.center_y < blk.center_y < player.center_y or self.center_y > blk.center_y > player.center_y
-                ):
-                    # Check if the block is in the way
-                    if (
-                        self.center_x < blk.center_x < player.center_x or self.center_x > blk.center_x > player.center_x
-                    ) and (
-                        self.center_y < blk.center_y < player.center_y or self.center_y > blk.center_y > player.center_y
-                    ):
-                        space_clear = False
-                        break
-
-            if space_clear:
+            min_coords = min(self.center_x, player.center_x), min(self.center_y, player.center_y)
+            max_coords = max(self.center_x, player.center_x), max(self.center_y, player.center_y)
+            if not any(min_coords < (blk.center_x, blk.center_y) < max_coords for blk in blocks):
                 # Check if the player is in the field of view
                 # Use trig to find the angle between the horizontal and the player
                 angle = math.atan2(
@@ -89,6 +76,7 @@ class Enemy(Character):
                 else:
                     if 3 * math.pi / 4 <= angle <= 5 * math.pi / 4:
                         return True
+        return False
 
     def notice_player(self):
         """The enemy has detected the player and will now attack."""
@@ -101,8 +89,8 @@ class Enemy(Character):
         """Finds a new spot for the enemy to stand on when it is passive."""
 
         new_pos = choice(self.available_spaces)
-        x = new_pos.position[0] - self.position[0]
-        self.direction = abs(x) / x
+        pos_x = new_pos.position[0] - self.position[0]
+        self.direction = abs(pos_x) / pos_x
         if self.direction == 1:
             val = new_pos.left
         else:
@@ -111,6 +99,7 @@ class Enemy(Character):
         return val, self.bottom
 
     def generate_available_spaces(self, sprite_list):
+        """Generates available spaces"""
         self.available_spaces = [block for block in sprite_list if block.top == self.bottom]
 
 
@@ -118,5 +107,6 @@ class DemoEnemy(Enemy):
     """Example enemy"""
 
     def __init__(self, bottom: float, left: float, game):
+        """DemoEnemy Init"""
         with get_sprite_path("enemies", "realistic_enemy") as path:
             super().__init__(bottom, left, path, 100, 20, None, game)

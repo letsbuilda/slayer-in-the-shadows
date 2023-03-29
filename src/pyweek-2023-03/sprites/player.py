@@ -23,6 +23,7 @@ class Player(Character):
         """Update the animation"""
 
     def use_dash(self):
+        """Uses a dash"""
         self.dashes -= 1
         self.dash_cooldown = DASH_COOLDOWN
 

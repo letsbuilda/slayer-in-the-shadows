@@ -47,6 +47,7 @@ class StartView(arcade.View):
         self.v_box.add(quit_button)
 
         # Add functionality
+        # pylint: disable=unused-argument
         @start_button.event("on_click")
         def on_click_start(event):
             self.manager.disable()
@@ -54,12 +55,14 @@ class StartView(arcade.View):
             game_view.setup()
             self.window.show_view(game_view)
 
+        # pylint: disable=unused-argument
         @settings_button.event("on_click")
         def on_click_settings(event):
             self.manager.disable()
             settings_view = SettingsView()
             self.window.show_view(settings_view)
 
+        # pylint: disable=unused-argument
         @quit_button.event("on_click")
         def on_click_quit(event):
             arcade.exit()
@@ -125,6 +128,7 @@ class SettingsView(arcade.View):
 
         self.v_box.add(key_box.with_space_around(bottom=20))
 
+        # pylint: disable=unused-argument
         @self.fs_button.event("on_click")
         def on_flip_fullscreen(event):
             self.window.set_fullscreen(not self.window.fullscreen)
@@ -135,6 +139,7 @@ class SettingsView(arcade.View):
         return_button = arcade.gui.UIFlatButton(text="<-", width=100)
         self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="left", anchor_y="top", child=return_button))
 
+        # pylint: disable=unused-argument
         @return_button.event("on_click")
         def on_click_return(event):
             self.manager.disable()
