@@ -1,308 +1,159 @@
 """Platformer Template"""
 
+from itertools import zip_longest
+
 import arcade
+import arcade.gui
 
-from .assets import get_tile_map_path
-from .constants import (
-    DEFAULT_DAMPING,
-    GRAVITY,
-    PLAYER_FRICTION,
-    PLAYER_JUMP_IMPULSE,
-    PLAYER_MASS,
-    PLAYER_MAX_HORIZONTAL_SPEED,
-    PLAYER_MAX_VERTICAL_SPEED,
-    PLAYER_MOVE_FORCE_IN_AIR,
-    PLAYER_MOVE_FORCE_ON_GROUND,
-    SCREEN_HEIGHT,
-    SCREEN_TITLE,
-    SCREEN_WIDTH,
-    TILE_SCALING,
-)
-from .handlers import player_hits_enemy
-from .sprites.enemy import DemoEnemy
-from .sprites.player import Player
+from .constants import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
+from .game_view import GameView
 
 
-class MyGame(arcade.Window):
-    """
-    Main application class.
-    """
+class StartView(arcade.View):
+    """Start view"""
 
     def __init__(self):
-        # Call the parent class and set up the window
-        super().__init__(
-            SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True
+        super().__init__()
+        # Required for all code that uses UI element
+        # a UIManager to handle the UI
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+        self.v_box = arcade.gui.UIBoxLayout()
+
+        self.title_text = arcade.Text(
+            "NINJA GAME",
+            self.window.width / 2,
+            self.window.height * 3 / 4,
+            arcade.color.WHITE,
+            font_size=50,
+            anchor_x="center",
         )
 
-        # Our TileMap Object
-        self.tile_map = None
+        # Make buttons
+        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200)
+        self.v_box.add(start_button.with_space_around(bottom=20))
 
-        # Our Scene Object
-        self.scene = None
+        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200)
+        self.v_box.add(settings_button.with_space_around(bottom=20))
 
-        # Separate variable that holds the player sprite
-        self.player = None
+        quit_button = arcade.gui.UIFlatButton(text="Quit", width=200)
+        self.v_box.add(quit_button)
 
-        # Our physics engine
-        self.physics_engine = None
+        # Add functionality
+        @start_button.event("on_click")
+        def on_click_start(event):
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
 
-        # A Camera that can be used for scrolling the screen
-        self.camera_sprites = None
+        @settings_button.event("on_click")
+        def on_click_settings(event):
+            self.manager.disable()
+            settings_view = SettingsView()
+            self.window.show_view(settings_view)
 
-        # A non-scrolling camera that can be used to draw GUI elements
-        self.camera_gui = None
+        @quit_button.event("on_click")
+        def on_click_quit(event):
+            arcade.exit()
 
-        # Keep track of the score
-        self.score = 0
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
 
-        # What key is pressed down?
-        self.up_key_down = False
-        self.left_key_down = False
-        self.right_key_down = False
+    def on_show_view(self):
+        """This is run once when we switch to this view"""
+        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
-    def setup(self):
-        """Set up the game here. Call this function to restart the game."""
-
-        # Setup the Cameras
-        self.camera_sprites = arcade.Camera(self.width, self.height)
-        self.camera_gui = arcade.Camera(self.width, self.height)
-
-        # Create the 'physics engine'
-        self.physics_engine = arcade.PymunkPhysicsEngine(
-            (0, -GRAVITY), damping=DEFAULT_DAMPING
-        )
-
-        # Layer specific options are defined based on Layer names in a dictionary
-        # Doing this will make the SpriteList for the platforms layer
-        # use spatial hashing for detection.
-        layer_options = {
-            "Blocks": {
-                "use_spatial_hash": True,
-            }
-        }
-
-        # Read in the tiled map
-        with get_tile_map_path("inf_demo") as map_path:
-            self.tile_map = arcade.load_tilemap(
-                map_path, TILE_SCALING, layer_options
-            )
-
-        # Initialize Scene with our TileMap, this will automatically add all layers
-        # from the map as SpriteLists in the scene in the proper order.
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
-
-        for spawner in self.scene.get_sprite_list("Spawners"):
-            entity_id = spawner.properties["tile_id"]
-            if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left)
-                self.scene.add_sprite("Player", self.player)
-            elif entity_id == 1:
-                enemy = DemoEnemy(spawner.bottom, spawner.left)
-                enemy.generate_available_spaces(self.scene["Blocks"])
-                self.scene.add_sprite("Enemy", enemy)
-                self.physics_engine.add_sprite(
-                    enemy,
-                    friction=PLAYER_FRICTION,
-                    mass=PLAYER_MASS,
-                    moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
-                    collision_type="enemy",
-                    damping=1.0,
-                    max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
-                    max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
-                )
-
-                self.physics_engine.add_collision_handler(
-                    "player",
-                    "enemy",
-                    player_hits_enemy,
-                )
-
-        self.scene.remove_sprite_list_by_name("Spawners")
-
-        # Set the background color
-        if self.tile_map.background_color:
-            arcade.set_background_color(self.tile_map.background_color)
-
-        # Keep track of the score
-        self.score = 0
-
-        self.physics_engine.add_sprite(
-            self.player,
-            friction=PLAYER_FRICTION,
-            mass=PLAYER_MASS,
-            moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
-            collision_type="player",
-            max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
-            max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
-        )
-
-        self.physics_engine.add_sprite_list(
-            self.scene["Blocks"],
-            body_type=1,
-            friction=1,
-            damping=DEFAULT_DAMPING,
-            collision_type="block",
-        )
+        # to reset the viewport back to the start so we can see what we draw.
+        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
     def on_draw(self):
-        """Render the screen."""
-
-        # Clear the screen to the background color
+        """Called when this view should draw"""
         self.clear()
+        self.title_text.draw()
+        self.manager.draw()
 
-        # Activate the game camera
-        self.camera_sprites.use()
 
-        # Draw our Scene
-        # Note, if you want pixelated look, add pixelated=True to the parameters
-        self.scene.draw()
+class SettingsView(arcade.View):
+    """Settings view"""
 
-        # Activate the GUI camera before drawing GUI elements
-        self.camera_gui.use()
+    def __init__(self):
+        super().__init__()
+        # Required for all code that uses UI element
+        # a UIManager to handle the UI
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
 
-        # Draw our score on the screen, scrolling it with the viewport
-        score_text = f"Score: {self.score}"
-        arcade.draw_text(
-            score_text,
-            start_x=10,
-            start_y=10,
-            color=arcade.csscolor.WHITE,
-            font_size=18,
-        )
+        self.v_box = arcade.gui.UIBoxLayout()
 
-    def update_player_speed(self):
-        # Calculate speed based on the keys pressed
+        self.fs_button = arcade.gui.UIFlatButton(text="Make fullscreen", width=200)
+        self.v_box.add(self.fs_button.with_space_around(bottom=20))
 
-        is_on_ground = self.physics_engine.is_on_ground(self.player)
-        # Update player forces based on keys pressed
-        if self.left_key_down and not self.right_key_down:
-            # Create a force to the left. Apply it.
-            if is_on_ground:
-                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            else:
-                force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
+        # IDK what this is meant to do so this is just placeholder for now
+        self.audio_button = arcade.gui.UIFlatButton(text="Audio button", width=200)
+        self.v_box.add(self.audio_button.with_space_around(bottom=20))
 
-            # Set friction to zero for the player while moving
-            self.physics_engine.set_friction(self.player, 0)
+        keys = [
+            ("Jump", "W", "UP_ARROW", "SPACE"),
+            ("Left ", "L", "LEFT_ARROW"),
+            ("Right", "R", "RIGHT_ARROW"),
+            ("Dash", "SHIFT"),
+        ]
+        actions, *keybinds = zip_longest(*keys, fillvalue="")
+        key_box = arcade.gui.UIBoxLayout(vertical=False)
+        # Action box
+        action_box = arcade.gui.UIBoxLayout(size_hint=0.8)
+        for action in actions:
+            action_box.add(
+                arcade.gui.UILabel(text=action, font_size=30, text_color=arcade.color.BLACK).with_space_around(
+                    bottom=20
+                )
+            )
+        key_box.add(action_box.with_space_around(left=10, right=10))
 
-        elif self.right_key_down and not self.left_key_down:
-            # Create a force to the right. Apply it.
-            if is_on_ground:
-                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
-            else:
-                force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
+        # Keybinds
+        # Need to add actual functionality to switch keybinds later
+        for column in keybinds:
+            column_box = arcade.gui.UIBoxLayout(size_hint=0.1)
+            for keybind in column:
+                column_box.add(arcade.gui.UIFlatButton(text=keybind, width=200).with_space_around(bottom=20))
+            key_box.add(column_box.with_space_around(left=10, right=10))
 
-            # Set friction to zero for the player while moving
-            self.physics_engine.set_friction(self.player, 0)
-        else:
-            # Player's feet are not moving. Therefore, up the friction so we stop.
-            self.physics_engine.set_friction(self.player, 1.0)
+        self.v_box.add(key_box.with_space_around(bottom=20))
 
-    def on_key_press(self, key, modifiers):
-        """Called whenever a key is pressed."""
+        @self.fs_button.event("on_click")
+        def on_flip_fullscreen(event):
+            self.window.set_fullscreen(not self.window.fullscreen)
+            self.fs_button.text = ({self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}).pop()
 
-        # Jump
-        if key == arcade.key.UP or key == arcade.key.W:
-            if self.physics_engine.is_on_ground(self.player):
-                impulse = (0, PLAYER_JUMP_IMPULSE)
-                self.physics_engine.apply_impulse(self.player, impulse)
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
 
-        # Left
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_key_down = True
-            self.update_player_speed()
+        return_button = arcade.gui.UIFlatButton(text="<-", width=100)
+        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="left", anchor_y="top", child=return_button))
 
-        # Right
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_key_down = True
+        @return_button.event("on_click")
+        def on_click_return(event):
+            self.manager.disable()
+            start_view = StartView()
+            self.window.show_view(start_view)
 
-    def on_key_release(self, key, modifiers):
-        """Called when the user releases a key."""
-        if key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_key_down = False
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_key_down = False
-        elif key == arcade.key.UP or key == arcade.key.W:
-            self.up_key_down = False
+    def on_show_view(self):
+        """This is run once when we switch to this view"""
+        arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
-    def center_camera_to_player(self):
-        # Find where player is, then calculate lower left corner from that
-        screen_center_x = self.player.center_x - (
-            self.camera_sprites.viewport_width / 2
-        )
-        screen_center_y = self.player.center_y - (
-            self.camera_sprites.viewport_height / 2
-        )
+        # to reset the viewport back to the start so we can see what we draw.
+        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
-        # Set some limits on how far we scroll
-        if screen_center_x < 0:
-            screen_center_x = 0
-        if screen_center_y < 0:
-            screen_center_y = 0
-
-        # Here's our center, move to it
-        player_centered = screen_center_x, screen_center_y
-        self.camera_sprites.move_to(player_centered)
-
-    def on_update(self, delta_time):
-        """Movement and game logic"""
-
-        self.physics_engine.step()
-
-        # Position the camera
-        self.center_camera_to_player()
-
-        self.update_player_speed()
-
-        # Update everything in the scene
-        self.scene.on_update()
-
-        for enemy in self.scene["Enemy"]:
-            if enemy.look_for(self.player, self.scene["Blocks"]):
-                enemy.notice_player()
-                enemy.target_position = self.player.left, self.player.bottom
-
-            if enemy.mode == 1:
-                enemy.target_position = self.player.left, self.player.bottom
-                enemy.moving = True
-                x = self.player.left - enemy.left
-                enemy.direction = abs(x) / x
-
-            if enemy.moving:
-                if self.physics_engine.is_on_ground(enemy):
-                    force = (7_000 * enemy.direction, 0)
-                else:
-                    force = (1_000 * enemy.direction, 0)
-                self.physics_engine.set_friction(enemy, 0)
-                self.physics_engine.apply_force(enemy, force)
-
-                if enemy.target_position[1] > enemy.position[
-                    1
-                ] and self.physics_engine.is_on_ground(enemy):
-                    impulse = (0, PLAYER_JUMP_IMPULSE)
-                    self.physics_engine.apply_impulse(enemy, impulse)
-
-                if enemy.direction == 1:
-                    cond = enemy.position[0] > enemy.target_position[0]
-                else:
-                    cond = enemy.position[0] < enemy.target_position[0]
-                if cond and enemy.mode != 1:
-                    self.physics_engine.set_friction(enemy, 1.0)
-                    enemy.cur_movement_cd = enemy.movement_cd
-                    enemy.moving = False
-
-    def on_resize(self, width, height):
-        """Resize window"""
-        self.camera_sprites.resize(int(width), int(height))
-        self.camera_gui.resize(int(width), int(height))
+    def on_draw(self):
+        """Called when this view should draw"""
+        self.clear()
+        self.manager.draw()
 
 
 def main():
     """Main function"""
-    window = MyGame()
-    window.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True)
+    start_view = StartView()
+    window.show_view(start_view)
     arcade.run()
 
 
