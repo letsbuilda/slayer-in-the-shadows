@@ -1,6 +1,7 @@
 """The player"""
 
-import asyncio
+import threading
+import time
 
 import arcade
 
@@ -40,7 +41,8 @@ class Player(Character):
                 self.change_x = -PLAYER_DASH_SPEED
                 self.dashes -= 1
                 self.can_dash = False
-                asyncio.run(self.reset_dash())
+                rThread = threading.Thread(target=self.reset_dash, daemon=True)
+                rThread.start()
             else:
                 self.change_x = -PLAYER_MOVEMENT_SPEED
 
@@ -49,16 +51,20 @@ class Player(Character):
                 self.change_x = PLAYER_DASH_SPEED
                 self.dashes -= 1
                 self.can_dash = False
-                asyncio.run(self.reset_dash())
+                rThread = threading.Thread(target=self.reset_dash, daemon=True)
+                rThread.start()
             else:
                 self.change_x = PLAYER_MOVEMENT_SPEED
 
-    async def reset_dash(self):
+    def reset_dash(self):
         """Reset dash after 1 second"""
-        asyncio.sleep(1)
-        self.dashes = 1
+        print("resetting dash")
+        time.sleep(1)
+        if self.dashes < 1:
+            self.dashes += 1
+        print("dash reset")
 
-    def on_key_press(self, key):
+    def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
 
         if self.game.physics_engine.can_jump():
