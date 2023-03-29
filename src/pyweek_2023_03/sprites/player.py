@@ -9,15 +9,20 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, sprite: str, health: int, speed: int, weapon, game):
-        super().__init__(bottom, left, sprite, health, speed, weapon, game)
+        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
         self.dashes = None
         self.dash_cooldown = None
-        self.is_facing_right = True
+        self.is_facing_right = None
+        self.is_on_ground = None
+        self.force = None
 
     def setup_player(self):
         """Setup the player"""
         self.dashes = MAX_DASHES
         self.dash_cooldown = 0
+        self.is_facing_right = True
+        self.is_on_ground = True
+        self.force = (0, 0)
 
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
