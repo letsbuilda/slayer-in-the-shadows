@@ -17,6 +17,7 @@ from .constants import (
     PLAYER_MOVE_FORCE_IN_AIR,
     PLAYER_MOVE_FORCE_ON_GROUND,
     TILE_SCALING,
+    WALL_FRICTION
 )
 from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
@@ -55,6 +56,7 @@ class GameView(arcade.View):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
+
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -128,6 +130,7 @@ class GameView(arcade.View):
             self.player,
             friction=PLAYER_FRICTION,
             mass=PLAYER_MASS,
+            elasticity=0,
             moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
             collision_type="player",
             max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
@@ -136,10 +139,9 @@ class GameView(arcade.View):
 
         self.physics_engine.add_sprite_list(
             self.scene["Blocks"],
-            body_type=1,
-            friction=1,
-            damping=DEFAULT_DAMPING,
-            collision_type="block",
+            body_type=arcade.PymunkPhysicsEngine.STATIC,
+            friction=WALL_FRICTION,
+            collision_type="wall",
         )
 
     def on_draw(self):
@@ -172,41 +174,40 @@ class GameView(arcade.View):
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
-        is_on_ground = self.physics_engine.is_on_ground(self.player)
         # Update player forces based on keys pressed
         if self.left_key_down and not self.right_key_down:
             # Create a force to the left. Apply it.
-            if is_on_ground:
+            if self.player.is_on_ground:
                 force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
             else:
                 force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
+            self.player.force = force
 
             # Set friction to zero for the player while moving
             self.physics_engine.set_friction(self.player, 0)
             self.player.is_facing_right = False
         elif self.right_key_down and not self.left_key_down:
             # Create a force to the right. Apply it.
-            if is_on_ground:
+            if self.player.is_on_ground:
                 force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
             else:
                 force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
-            self.physics_engine.apply_force(self.player, force)
+            self.player.force = force
 
             # Set friction to zero for the player while moving
             self.physics_engine.set_friction(self.player, 0)
             self.player.is_facing_right = True
         else:
             # Player's feet are not moving. Therefore, up the friction so we stop.
+            self.player.force = (0, 0)
             self.physics_engine.set_friction(self.player, 1.0)
 
     def on_key_press(self, symbol, modifiers):
         """Called whenever a key is pressed."""
         if symbol in KEYMAP_DICT["Jump"]:
-            if self.physics_engine.is_on_ground(self.player):
+            if self.player.is_on_ground:
                 impulse = (0, PLAYER_JUMP_IMPULSE)
                 self.physics_engine.apply_impulse(self.player, impulse)
-            self.update_player_speed()
         elif symbol in KEYMAP_DICT["Left"]:
             self.left_key_down = True
             self.update_player_speed()
@@ -281,8 +282,13 @@ class GameView(arcade.View):
     def on_update(self, delta_time):
         """Movement and game logic"""
 
-        # Move the player with the physics engine
+        # Move the physics engine
         self.physics_engine.step()
+        self.physics_engine.apply_force(self.player, self.player.force)
+
+        if self.physics_engine.is_on_ground(self.player) ^ self.player.is_on_ground:
+            self.player.is_on_ground ^= True
+            self.update_player_speed()
 
         # Position the camera
         self.center_camera_to_player()
