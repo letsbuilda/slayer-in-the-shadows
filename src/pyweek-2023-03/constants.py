@@ -48,17 +48,17 @@ DASH_MOVE_IMPULSE = 15_000
 # Controls
 KEYMAP_DICT = {
     "Jump": [arcade.key.W, arcade.key.UP, arcade.key.SPACE],
-    'Left': [arcade.key.A,  arcade.key.LEFT],
-    'Right': [arcade.key.D, arcade.key.RIGHT],
-    "Dash": [arcade.key.L]
+    "Left": [arcade.key.A, arcade.key.LEFT],
+    "Right": [arcade.key.D, arcade.key.RIGHT],
+    "Dash": [arcade.key.L],
 }
 ARCADE_KEYS_TO_NAME = {
-    arcade.key.W: 'W',
-    arcade.key.UP: 'UP_ARROW',
-    arcade.key.SPACE: 'SPACE',
-    arcade.key.A: 'A',
-    arcade.key.LEFT: 'LEFT_ARROW',
-    arcade.key.D: 'D',
-    arcade.key.RIGHT: 'RIGHT_ARROW',
-    arcade.key.L: 'L',
+    arcade.key.W: "W",
+    arcade.key.UP: "UP_ARROW",
+    arcade.key.SPACE: "SPACE",
+    arcade.key.A: "A",
+    arcade.key.LEFT: "LEFT_ARROW",
+    arcade.key.D: "D",
+    arcade.key.RIGHT: "RIGHT_ARROW",
+    arcade.key.L: "L",
 }

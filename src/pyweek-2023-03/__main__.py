@@ -5,7 +5,13 @@ from itertools import zip_longest
 import arcade
 import arcade.gui
 
-from .constants import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH, KEYMAP_DICT, ARCADE_KEYS_TO_NAME
+from .constants import (
+    ARCADE_KEYS_TO_NAME,
+    KEYMAP_DICT,
+    SCREEN_HEIGHT,
+    SCREEN_TITLE,
+    SCREEN_WIDTH,
+)
 from .game_view import GameView
 
 
@@ -111,8 +117,9 @@ class SettingsView(arcade.View):
             column_box = arcade.gui.UIBoxLayout(size_hint=0.1)
             for keybind in column:
                 column_box.add(
-                    arcade.gui.UIFlatButton(text=ARCADE_KEYS_TO_NAME.get(keybind, ''), width=200)
-                        .with_space_around(bottom=20)
+                    arcade.gui.UIFlatButton(text=ARCADE_KEYS_TO_NAME.get(keybind, ""), width=200).with_space_around(
+                        bottom=20
+                    )
                 )
             key_box.add(column_box.with_space_around(left=10, right=10))
 

@@ -5,17 +5,15 @@ from random import choice, randint
 
 import arcade
 
-from .character import Character
 from ..assets import get_asset_path, get_sprite_path
+from .character import Character
 
 
 class Enemy(Character):
     """Base enemy class from which the various enemy types are made"""
 
     def __init__(self, bottom, left, sprite, health: int, speed: int, weapon, game):
-        super().__init__(
-            bottom, left, sprite, health, speed, weapon, game, "Detailed"
-        )
+        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
@@ -65,19 +63,15 @@ class Enemy(Character):
             for blk in blocks:
                 # Check if the block is between the enemy and the player
                 if (
-                    self.center_x < blk.center_x < player.center_x
-                    or self.center_x > blk.center_x > player.center_x
+                    self.center_x < blk.center_x < player.center_x or self.center_x > blk.center_x > player.center_x
                 ) and (
-                    self.center_y < blk.center_y < player.center_y
-                    or self.center_y > blk.center_y > player.center_y
+                    self.center_y < blk.center_y < player.center_y or self.center_y > blk.center_y > player.center_y
                 ):
                     # Check if the block is in the way
                     if (
-                        self.center_x < blk.center_x < player.center_x
-                        or self.center_x > blk.center_x > player.center_x
+                        self.center_x < blk.center_x < player.center_x or self.center_x > blk.center_x > player.center_x
                     ) and (
-                        self.center_y < blk.center_y < player.center_y
-                        or self.center_y > blk.center_y > player.center_y
+                        self.center_y < blk.center_y < player.center_y or self.center_y > blk.center_y > player.center_y
                     ):
                         space_clear = False
                         break
@@ -117,9 +111,7 @@ class Enemy(Character):
         return val, self.bottom
 
     def generate_available_spaces(self, sprite_list):
-        self.available_spaces = [
-            block for block in sprite_list if block.top == self.bottom
-        ]
+        self.available_spaces = [block for block in sprite_list if block.top == self.bottom]
 
 
 class DemoEnemy(Enemy):

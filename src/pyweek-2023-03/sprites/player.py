@@ -5,7 +5,7 @@ import time
 
 import arcade
 
-from ..constants import MAX_DASHES, DASH_COOLDOWN
+from ..constants import DASH_COOLDOWN, MAX_DASHES
 from .character import Character
 
 
@@ -41,4 +41,3 @@ class Player(Character):
             self.dashes += 1
             if self.dashes < MAX_DASHES:
                 self.dash_cooldown = DASH_COOLDOWN
-
