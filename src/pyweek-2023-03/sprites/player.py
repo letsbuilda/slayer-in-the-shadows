@@ -1,10 +1,5 @@
 """The player"""
 
-import threading
-import time
-
-import arcade
-
 from ..constants import DASH_COOLDOWN, MAX_DASHES
 from .character import Character
 
