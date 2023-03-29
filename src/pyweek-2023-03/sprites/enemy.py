@@ -5,23 +5,17 @@ from random import choice, randint
 
 import arcade
 
-from .. import constants
+from .character import Character
 from ..assets import get_asset_path, get_sprite_path
 
 
-class Enemy(arcade.Sprite):
+class Enemy(Character):
     """Base enemy class from which the various enemy types are made"""
 
-    def __init__(self, bottom, left, sprite, health: int, speed: int, weapon):
+    def __init__(self, bottom, left, sprite, health: int, speed: int, weapon, game):
         super().__init__(
-            sprite, constants.CHARACTER_SCALING, hit_box_algorithm="Detailed"
+            bottom, left, sprite, health, speed, weapon, game, "Detailed"
         )
-        self.bottom = bottom
-        self.left = left
-
-        self.health = health
-        self.speed = 10
-        self.weapon = weapon
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
@@ -131,6 +125,6 @@ class Enemy(arcade.Sprite):
 class DemoEnemy(Enemy):
     """Example enemy"""
 
-    def __init__(self, bottom: float, left: float):
+    def __init__(self, bottom: float, left: float, game):
         with get_sprite_path("enemies", "realistic_enemy") as path:
-            super().__init__(bottom, left, path, 100, 20, None)
+            super().__init__(bottom, left, path, 100, 20, None, game)

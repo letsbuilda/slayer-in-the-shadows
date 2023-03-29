@@ -1,4 +1,5 @@
 """Variables that are needed in multiple files and don't change."""
+import arcade
 
 # Screen
 SCREEN_WIDTH = 24 * 64
@@ -13,8 +14,8 @@ SPRITE_PIXEL_SIZE = 128
 GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
 
 # Movement speed of player, in pixels per frame
-PLAYER_MOVEMENT_SPEED = 10
-PLAYER_JUMP_SPEED = 20
+MAX_DASHES = 1
+DASH_COOLDOWN = 5
 
 ENEMY_RENDER_DISTANCE = 500
 ENEMY_FOV = 0.4
@@ -42,3 +43,22 @@ PLAYER_MAX_VERTICAL_SPEED = 1_600
 PLAYER_MOVE_FORCE_ON_GROUND = 30_000
 PLAYER_MOVE_FORCE_IN_AIR = 10_000
 PLAYER_JUMP_IMPULSE = 1800
+DASH_MOVE_IMPULSE = 15_000
+
+# Controls
+KEYMAP_DICT = {
+    "Jump": [arcade.key.W, arcade.key.UP, arcade.key.SPACE],
+    'Left': [arcade.key.A,  arcade.key.LEFT],
+    'Right': [arcade.key.D, arcade.key.RIGHT],
+    "Dash": [arcade.key.L]
+}
+ARCADE_KEYS_TO_NAME = {
+    arcade.key.W: 'W',
+    arcade.key.UP: 'UP_ARROW',
+    arcade.key.SPACE: 'SPACE',
+    arcade.key.A: 'A',
+    arcade.key.LEFT: 'LEFT_ARROW',
+    arcade.key.D: 'D',
+    arcade.key.RIGHT: 'RIGHT_ARROW',
+    arcade.key.L: 'L',
+}

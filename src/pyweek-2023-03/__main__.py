@@ -5,7 +5,7 @@ from itertools import zip_longest
 import arcade
 import arcade.gui
 
-from .constants import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH
+from .constants import SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH, KEYMAP_DICT, ARCADE_KEYS_TO_NAME
 from .game_view import GameView
 
 
@@ -43,6 +43,7 @@ class StartView(arcade.View):
         # Add functionality
         @start_button.event("on_click")
         def on_click_start(event):
+            self.manager.disable()
             game_view = GameView()
             game_view.setup()
             self.window.show_view(game_view)
@@ -92,13 +93,7 @@ class SettingsView(arcade.View):
         self.audio_button = arcade.gui.UIFlatButton(text="Audio button", width=200)
         self.v_box.add(self.audio_button.with_space_around(bottom=20))
 
-        keys = [
-            ("Jump", "W", "UP_ARROW", "SPACE"),
-            ("Left ", "L", "LEFT_ARROW"),
-            ("Right", "R", "RIGHT_ARROW"),
-            ("Dash", "SHIFT"),
-        ]
-        actions, *keybinds = zip_longest(*keys, fillvalue="")
+        actions, *keybinds = KEYMAP_DICT.keys(), *zip_longest(*KEYMAP_DICT.values(), fillvalue="")
         key_box = arcade.gui.UIBoxLayout(vertical=False)
         # Action box
         action_box = arcade.gui.UIBoxLayout(size_hint=0.8)
@@ -115,7 +110,10 @@ class SettingsView(arcade.View):
         for column in keybinds:
             column_box = arcade.gui.UIBoxLayout(size_hint=0.1)
             for keybind in column:
-                column_box.add(arcade.gui.UIFlatButton(text=keybind, width=200).with_space_around(bottom=20))
+                column_box.add(
+                    arcade.gui.UIFlatButton(text=ARCADE_KEYS_TO_NAME.get(keybind, ''), width=200)
+                        .with_space_around(bottom=20)
+                )
             key_box.add(column_box.with_space_around(left=10, right=10))
 
         self.v_box.add(key_box.with_space_around(bottom=20))

@@ -4,10 +4,13 @@
 import arcade
 
 from .assets import get_tile_map_path
-from .constants import GRAVITY, TILE_SCALING
-from .sprites.enemy import Enemy
+from .constants import GRAVITY, TILE_SCALING, PLAYER_JUMP_IMPULSE, DASH_MOVE_IMPULSE, \
+    PLAYER_MOVE_FORCE_ON_GROUND, PLAYER_MOVE_FORCE_IN_AIR, DEFAULT_DAMPING, PLAYER_FRICTION, PLAYER_MASS, \
+    PLAYER_MAX_HORIZONTAL_SPEED, PLAYER_MAX_VERTICAL_SPEED, KEYMAP_DICT
+from .sprites.enemy import Enemy, DemoEnemy
 from .sprites.player import Player
-
+from .handlers import player_hits_enemy
+c = 0
 
 # pylint: disable=too-many-instance-attributes
 class GameView(arcade.View):
@@ -41,7 +44,6 @@ class GameView(arcade.View):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
-        self.shift_key_down = False
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -53,6 +55,10 @@ class GameView(arcade.View):
         # Setup the Cameras
         self.camera_sprites = arcade.Camera(self.window.width, self.window.height)
         self.camera_gui = arcade.Camera(self.window.width, self.window.height)
+
+        self.physics_engine = arcade.PymunkPhysicsEngine(
+            (0, -GRAVITY), damping=DEFAULT_DAMPING
+        )
 
         # Name of map file to load
 
@@ -66,8 +72,10 @@ class GameView(arcade.View):
         }
 
         # Read in the tiled map
-        with get_tile_map_path("demo") as map_path:
-            self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
+        with get_tile_map_path("inf_demo") as map_path:
+            self.tile_map = arcade.load_tilemap(
+                map_path, TILE_SCALING, layer_options
+            )
 
         # Initialize Scene with our TileMap, this will automatically add all layers
         # from the map as SpriteLists in the scene in the proper order.
@@ -78,9 +86,28 @@ class GameView(arcade.View):
             if entity_id == 0:
                 self.player = Player(spawner.bottom, spawner.left, "player/realistic_player", 100, 30, None, self)
                 self.scene.add_sprite("Player", self.player)
+                self.player.setup_player()
             elif entity_id == 1:
+                enemy = DemoEnemy(spawner.bottom, spawner.left, self)
+                enemy.generate_available_spaces(self.scene["Blocks"])
                 self.scene.add_sprite(
-                    "Enemy", Enemy(spawner.bottom, spawner.left, "enemies/realistic_enemy", 100, 20, None, self)
+                    "Enemy", enemy
+                )
+                self.physics_engine.add_sprite(
+                    enemy,
+                    friction=PLAYER_FRICTION,
+                    mass=PLAYER_MASS,
+                    moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
+                    collision_type="enemy",
+                    damping=1.0,
+                    max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
+                    max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
+                )
+
+                self.physics_engine.add_collision_handler(
+                    "player",
+                    "enemy",
+                    player_hits_enemy,
                 )
 
         self.scene.remove_sprite_list_by_name("Spawners")
@@ -92,13 +119,23 @@ class GameView(arcade.View):
         # Keep track of the score
         self.score = 0
 
-        # --- Other stuff
-        # Create the 'physics engine'
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player, gravity_constant=GRAVITY, walls=self.scene["Blocks"]
+        self.physics_engine.add_sprite(
+            self.player,
+            friction=PLAYER_FRICTION,
+            mass=PLAYER_MASS,
+            moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
+            collision_type="player",
+            max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED,
+            max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
         )
 
-        self.player.setup_player()
+        self.physics_engine.add_sprite_list(
+            self.scene["Blocks"],
+            body_type=1,
+            friction=1,
+            damping=DEFAULT_DAMPING,
+            collision_type="block",
+        )
 
     def on_draw(self):
         """Render the screen."""
@@ -130,15 +167,62 @@ class GameView(arcade.View):
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
-        self.player.update_player_speed()
+        is_on_ground = self.physics_engine.is_on_ground(self.player)
+        # Update player forces based on keys pressed
+        if self.left_key_down and not self.right_key_down:
+            # Create a force to the left. Apply it.
+            if is_on_ground:
+                force = (-PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (-PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
 
-    def on_key_press(self, symbol, modifiers):
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+            self.player.is_facing_right = False
+        elif self.right_key_down and not self.left_key_down:
+            # Create a force to the right. Apply it.
+            if is_on_ground:
+                force = (PLAYER_MOVE_FORCE_ON_GROUND, 0)
+            else:
+                force = (PLAYER_MOVE_FORCE_IN_AIR, 0)
+            self.physics_engine.apply_force(self.player, force)
+
+            # Set friction to zero for the player while moving
+            self.physics_engine.set_friction(self.player, 0)
+            self.player.is_facing_right = True
+        else:
+            # Player's feet are not moving. Therefore, up the friction so we stop.
+            self.physics_engine.set_friction(self.player, 1.0)
+
+    def on_key_press(self, key, modifiers):
         """Called whenever a key is pressed."""
-        self.player.on_key_press(symbol)
+        if key in KEYMAP_DICT['Jump']:
+            if self.physics_engine.is_on_ground(self.player):
+                impulse = (0, PLAYER_JUMP_IMPULSE)
+                self.physics_engine.apply_impulse(self.player, impulse)
+            self.update_player_speed()
+        elif key in KEYMAP_DICT['Left']:
+            self.left_key_down = True
+            self.update_player_speed()
+        elif key in KEYMAP_DICT['Right']:
+            self.right_key_down = True
+            self.update_player_speed()
+        elif key in KEYMAP_DICT['Dash']:
+            if self.player.dashes:
+                impulse = (DASH_MOVE_IMPULSE, 0) if self.player.is_facing_right else (-DASH_MOVE_IMPULSE, 0)
+                self.physics_engine.apply_impulse(self.player, impulse)
+                self.player.use_dash()
+                self.update_player_speed()
 
-    def on_key_release(self, symbol, modifiers):
+    def on_key_release(self, key, modifiers):
         """Called when the user releases a key."""
-        self.player.on_key_release(symbol)
+        if key in KEYMAP_DICT['Left']:
+            self.left_key_down = False
+            self.update_player_speed()
+        elif key in KEYMAP_DICT['Right']:
+            self.right_key_down = False
+            self.update_player_speed()
 
     def center_camera_to_player(self):
         """Centers the camera to the player"""
@@ -154,14 +238,53 @@ class GameView(arcade.View):
         player_centered = screen_center_x, screen_center_y
         self.camera_sprites.move_to(player_centered)
 
+    def update_enemies(self):
+        for enemy in self.scene["Enemy"]:
+            if enemy.look_for(self.player, self.scene["Blocks"]):
+                enemy.notice_player()
+                enemy.target_position = self.player.left, self.player.bottom
+
+            if enemy.mode == 1:
+                enemy.target_position = self.player.left, self.player.bottom
+                enemy.moving = True
+                x = self.player.left - enemy.left
+                enemy.direction = abs(x) / x
+
+            if enemy.moving:
+                if self.physics_engine.is_on_ground(enemy):
+                    force = (7_000 * enemy.direction, 0)
+                else:
+                    force = (1_000 * enemy.direction, 0)
+                self.physics_engine.set_friction(enemy, 0)
+                self.physics_engine.apply_force(enemy, force)
+
+                if enemy.target_position[1] > enemy.position[
+                    1
+                ] and self.physics_engine.is_on_ground(enemy):
+                    impulse = (0, PLAYER_JUMP_IMPULSE)
+                    self.physics_engine.apply_impulse(enemy, impulse)
+
+                if enemy.direction == 1:
+                    cond = enemy.position[0] > enemy.target_position[0]
+                else:
+                    cond = enemy.position[0] < enemy.target_position[0]
+                if cond and enemy.mode != 1:
+                    self.physics_engine.set_friction(enemy, 1.0)
+                    enemy.cur_movement_cd = enemy.movement_cd
+                    enemy.moving = False
+
     def on_update(self, delta_time):
         """Movement and game logic"""
 
         # Move the player with the physics engine
-        self.physics_engine.update()
+        self.physics_engine.step()
 
         # Position the camera
         self.center_camera_to_player()
+
+        self.player.on_update(delta_time)
+
+        self.update_enemies()
 
     def on_resize(self, width, height):
         """Resize window"""
