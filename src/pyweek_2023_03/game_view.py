@@ -17,7 +17,7 @@ from .constants import (
     PLAYER_MOVE_FORCE_IN_AIR,
     PLAYER_MOVE_FORCE_ON_GROUND,
     TILE_SCALING,
-    WALL_FRICTION
+    WALL_FRICTION,
 )
 from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
@@ -56,7 +56,6 @@ class GameView(arcade.View):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
-
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
