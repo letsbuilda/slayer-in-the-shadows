@@ -8,8 +8,12 @@ class Player(Character):
     """The main player The player sprite is 32x26"""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, bottom, left, sprite: str, health: int, speed: int, weapon, game):
-        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
+    def __init__(
+        self, bottom, left, sprite: str, health: int, speed: int, weapon, game
+    ):
+        super().__init__(
+            bottom, left, sprite, health, speed, weapon, game, "Detailed"
+        )
         self.dashes = None
         self.dash_cooldown = None
         self.is_facing_right = None
@@ -23,6 +27,8 @@ class Player(Character):
         self.is_facing_right = True
         self.is_on_ground = True
         self.force = (0, 0)
+
+        self.last_position = None
 
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""

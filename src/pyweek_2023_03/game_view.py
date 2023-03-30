@@ -303,6 +303,8 @@ class GameView(arcade.View):
                     enemy.cur_movement_cd = enemy.movement_cd
                     enemy.moving = False
 
+            enemy.last_position = enemy.position
+
     def on_update(self, delta_time):
         """Movement and game logic"""
 
@@ -323,6 +325,8 @@ class GameView(arcade.View):
         self.player.on_update(delta_time)
 
         self.update_enemies()
+
+        self.player.last_position = self.player.position
 
     def on_resize(self, width, height):
         """Resize window"""

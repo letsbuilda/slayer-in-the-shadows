@@ -42,6 +42,7 @@ class Enemy(Character):
         self.direction = 1
 
         self.available_spaces = []
+        self.last_position = self.position
 
         # The actions an enemy will do.
         # Mode 0 is passive, the enemy wanders around the platform.
@@ -76,6 +77,13 @@ class Enemy(Character):
         # Check if the enemy can check the position yet to save performance
         if self.raycast_cd > 0:
             self.raycast_cd -= 1
+            return False
+
+        # If neither move, nothing changed
+        if (
+            player.last_position == player.position
+            or self.position == self.last_position
+        ):
             return False
 
         # Check if the distance between the player and the enemy is less than the enemy's render distance
