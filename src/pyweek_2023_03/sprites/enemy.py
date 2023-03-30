@@ -77,43 +77,23 @@ class Enemy(Character):
             math.dist(player.position, self.position) < ENEMY_RENDER_DISTANCE
             and self.mode == 0
         ):
-            # Find if there is any blocks intersecting with the line between the enemy and the player
-            space_clear = True
-            # Calculate the direction vector from the enemy to the player
-            dx, dy = (
-                player.center_x - self.center_x,
-                player.center_y - self.center_y,
-            )
-            distance = math.sqrt(dx**2 + dy**2)
-            direction = (dx / distance, dy / distance)
+            if self.in_fov(player):
+                return self.space_clear(player, blocks)
+        return False
 
-            # Iterate over points along the direction vector
-            step_size = 30
-            for i in range(0, int(distance), step_size):
-                x, y = (
-                    self.center_x + direction[0] * i,
-                    self.center_y + direction[1] * i,
-                )
-
-                # Check for collisions with blocks
-                for block in blocks:
-                    if block.collides_with_point((x, y)):
-                        space_clear = False
-                        break
-
-            if space_clear:
-                # Check if the player is in the field of view
-                # Use trig to find the angle between the horizontal and the player
-                angle = math.atan2(
-                    player.center_y - self.center_y,
-                    player.center_x - self.center_x,
-                )
-                if self.direction == 1:
-                    if -math.pi / 4 <= angle <= math.pi / 4:
-                        return True
-                else:
-                    if 3 * math.pi / 4 <= angle <= 5 * math.pi / 4:
-                        return True
+    def in_fov(self, player):
+        """Check if the player is in the field of view."""
+        # Use trig to find the angle between the horizontal and the player
+        angle = math.atan2(
+            player.center_y - self.center_y,
+            player.center_x - self.center_x,
+        )
+        if self.direction == 1:
+            if -math.pi / 4 <= angle <= math.pi / 4:
+                return True
+        else:
+            if 3 * math.pi / 4 <= angle <= 5 * math.pi / 4:
+                return True
         return False
 
     def notice_player(self):
@@ -122,6 +102,31 @@ class Enemy(Character):
         self.mode = 1
         self.alert_sound.play()
         self.moving = True
+
+    def space_clear(self, player, blocks):
+        """Checks if the space is clear between an enemy and the player."""
+
+        dx, dy = (
+            player.center_x - self.center_x,
+            player.center_y - self.center_y,
+        )
+        distance = math.sqrt(dx**2 + dy**2)
+        direction = (dx / distance, dy / distance)
+
+        # Iterate over points along the direction vector
+        step_size = 30
+        for i in range(0, int(distance), step_size):
+            x, y = (
+                self.center_x + direction[0] * i,
+                self.center_y + direction[1] * i,
+            )
+
+            # Check for collisions with blocks
+            for block in blocks:
+                if block.collides_with_point((x, y)):
+                    return False
+
+        return True
 
     def find_new_spot(self):
         """Finds a new spot for the enemy to stand on when it is passive."""
