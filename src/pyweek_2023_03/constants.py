@@ -19,7 +19,7 @@ DASH_COOLDOWN = 2
 
 # Time slow
 SLOW_TIME_DURATION = 4
-SLOW_TIME_COOLDOWN = 1
+SLOW_TIME_COOLDOWN = 10
 
 ENEMY_RENDER_DISTANCE = 500
 ENEMY_FOV = 0.4
@@ -54,7 +54,7 @@ KEYMAP_DICT = {
     "Left": [arcade.key.A, arcade.key.LEFT],
     "Right": [arcade.key.D, arcade.key.RIGHT],
     "Dash": [arcade.key.L, arcade.key.MOD_SHIFT],
-    "Slow time": [arcade.key.P]
+    "Slow time": [arcade.key.P],
 }
 ARCADE_KEYS_TO_NAME = {
     arcade.key.W: "W",
@@ -66,5 +66,5 @@ ARCADE_KEYS_TO_NAME = {
     arcade.key.RIGHT: "RIGHT_ARROW",
     arcade.key.L: "L",
     arcade.key.MOD_SHIFT: "MOD_SHIFT",
-    arcade.key.P: "P"
+    arcade.key.P: "P",
 }

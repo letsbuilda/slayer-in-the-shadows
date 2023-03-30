@@ -1,9 +1,14 @@
 """The player"""
 
-from ..constants import DASH_COOLDOWN, MAX_DASHES, SLOW_TIME_COOLDOWN, SLOW_TIME_DURATION
+from ..constants import (
+    DASH_COOLDOWN,
+    MAX_DASHES,
+    SLOW_TIME_COOLDOWN,
+    SLOW_TIME_DURATION,
+)
 from .character import Character
 
-
+# pylint: disable=too-many-instance-attributes
 class Player(Character):
     """The main player The player sprite is 32x26"""
 
