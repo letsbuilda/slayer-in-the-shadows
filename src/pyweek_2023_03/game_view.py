@@ -100,11 +100,9 @@ class GameView(arcade.View):
                 self.player = Player(
                     spawner.bottom,
                     spawner.left,
-                    "player/realistic_player",
                     100,
                     30,
-                    None,
-                    self,
+                    self
                 )
                 self.scene.add_sprite("Player", self.player)
                 self.player.setup_player()
