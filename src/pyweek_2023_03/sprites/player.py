@@ -1,24 +1,30 @@
 """The player"""
+import arcade
 
 from ..constants import DASH_COOLDOWN, MAX_DASHES
 from .character import Character
+from ..assets import get_sprite_path
 
 
 class Player(Character):
     """The main player The player sprite is 32x26"""
 
     # pylint: disable=too-many-arguments
-    def __init__(
-        self, bottom, left, sprite: str, health: int, speed: int, weapon, game
-    ):
-        super().__init__(
-            bottom, left, sprite, health, speed, weapon, game, "Detailed"
-        )
+    def __init__(self, bottom, left, health: int, speed: int, game):
+        super().__init__(bottom, left, None, health, speed, game)
         self.dashes = None
         self.dash_cooldown = None
         self.is_facing_right = None
         self.is_on_ground = None
         self.force = None
+        with get_sprite_path("player", "idle") as sprite_path:
+            self.idle = arcade.load_spritesheet(sprite_path, 32, 26, 4, 4, hit_box_algorithm="Detailed")
+            self.texture = self.idle[0]
+        with get_sprite_path("player", "move") as sprite_path:
+            self.move = arcade.load_spritesheet(sprite_path, 36, 26, 4, 4, hit_box_algorithm="Detailed")
+
+        self.bottom = bottom
+        self.left = left
 
     def setup_player(self):
         """Setup the player"""
@@ -28,10 +34,15 @@ class Player(Character):
         self.is_on_ground = True
         self.force = (0, 0)
 
-        self.last_position = None
-
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
+        self.cur_texture_index += 1
+        if self.cur_texture_index >= 4 * 7 * 3:
+            self.cur_texture_index = 0
+        if self.force == (0, 0):
+            self.texture = self.idle[self.cur_texture_index // (3 * 7)]
+        else:
+            self.texture = self.move[self.cur_texture_index // (4 * 7)]
 
     def use_dash(self):
         """Uses a dash"""
