@@ -22,11 +22,10 @@ class Enemy(Character):
         sprite: str,
         health: int,
         speed: int,
-        weapon,
         game,
     ):
         super().__init__(
-            bottom, left, sprite, health, speed, weapon, game, "Detailed"
+            bottom, left, sprite, health, speed, game, "Detailed"
         )
 
         # Time (in seconds) until the enemy moves again
@@ -170,4 +169,4 @@ class DemoEnemy(Enemy):
     def __init__(self, bottom: float, left: float, game):
         """DemoEnemy Init"""
         with get_sprite_path("enemies", "realistic_enemy") as path:
-            super().__init__(bottom, left, path, 100, 20, None, game)
+            super().__init__(bottom, left, path, 100, 20, game)
