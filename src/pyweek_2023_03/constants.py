@@ -69,3 +69,5 @@ ARCADE_KEYS_TO_NAME = {
     arcade.key.MOD_SHIFT: "MOD_SHIFT",
     arcade.key.P: "P",
 }
+
+ANIMATION_FREEZE_TIME = 3

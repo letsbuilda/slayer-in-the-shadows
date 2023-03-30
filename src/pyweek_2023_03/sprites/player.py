@@ -6,6 +6,7 @@ from ..constants import (
     MAX_DASHES,
     SLOW_TIME_COOLDOWN,
     SLOW_TIME_DURATION,
+    ANIMATION_FREEZE_TIME
 )
 from .character import Character
 from ..assets import get_sprite_path
@@ -17,7 +18,8 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, health: int, speed: int, game):
-        super().__init__(bottom, left, None, health, speed, game)
+        super().__init__(bottom, left, None, health, speed, game, character_scaling=2)
+        self.jump_index = None
         self.dashes = None
         self.dash_cooldown = None
 
@@ -29,10 +31,21 @@ class Player(Character):
         self.is_on_ground = None
         self.force = None
         with get_sprite_path("player", "idle") as sprite_path:
-            self.idle = arcade.load_spritesheet(sprite_path, 32, 26, 4, 4, hit_box_algorithm="Detailed")
-            self.texture = self.idle[0]
+            self.idle = [[], []]
+            for i in range(2):
+                self.idle[i] = arcade.load_textures(sprite_path, [(j*32, 0, 32, 26) for j in range(4)], bool(i), hit_box_algorithm="Detailed")
+            #self.idle = arcade.load_spritesheet(sprite_path, 32, 26, 4, 4, hit_box_algorithm="Detailed")
+            self.texture = self.idle[0][0]
         with get_sprite_path("player", "move") as sprite_path:
-            self.move = arcade.load_spritesheet(sprite_path, 36, 26, 4, 4, hit_box_algorithm="Detailed")
+            self.move = [[], []]
+            for i in range(2):
+                self.move[i] = arcade.load_textures(sprite_path, [(j*36, 0, 36, 26) for j in range(3)], bool(i), hit_box_algorithm="Detailed")
+            #self.move = arcade.load_spritesheet(sprite_path, 36, 26, 3, 3, hit_box_algorithm="Detailed")
+        with get_sprite_path("player", "jump") as sprite_path:
+            self.jump = [[], []]
+            for i in range(2):
+                self.jump[i] = arcade.load_textures(sprite_path, [(j*34, 0, 34, 30) for j in range(8)], bool(i), hit_box_algorithm="Detailed")
+            #self.jump = arcade.load_spritesheet(sprite_path, 34, 30, 8, 8, hit_box_algorithm="Detailed")
 
         self.bottom = bottom
         self.left = left
@@ -49,16 +62,26 @@ class Player(Character):
         self.is_facing_right = True
         self.is_on_ground = True
         self.force = (0, 0)
+        self.jump_index = -1
 
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
-        self.cur_texture_index += 1
-        if self.cur_texture_index >= 4 * 7 * 3:
-            self.cur_texture_index = 0
-        if self.force == (0, 0):
-            self.texture = self.idle[self.cur_texture_index // (3 * 7)]
+        if not self.jump_index >= 0:
+            if self.is_on_ground:
+                self.cur_texture_index += 1
+                if self.cur_texture_index >= 4 * ANIMATION_FREEZE_TIME * 3:
+                    self.cur_texture_index = 0
+                if self.force == (0, 0):
+                    self.texture = self.idle[int(not self.is_facing_right)][self.cur_texture_index // (3 * ANIMATION_FREEZE_TIME)]
+                else:
+                    self.texture = self.move[int(not self.is_facing_right)][self.cur_texture_index // (4 * ANIMATION_FREEZE_TIME)]
+            else:
+                self.texture = self.jump[int(not self.is_facing_right)][7]
         else:
-            self.texture = self.move[self.cur_texture_index // (4 * 7)]
+            self.texture = self.jump[int(not self.is_facing_right)][self.jump_index // ANIMATION_FREEZE_TIME]
+            self.jump_index += 1
+            if self.jump_index >= ANIMATION_FREEZE_TIME * 7:
+                self.jump_index = -1
 
     def use_dash(self):
         """

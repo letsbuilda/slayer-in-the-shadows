@@ -284,6 +284,7 @@ class GameView(arcade.View):
             if self.player.is_on_ground:
                 impulse = (0, PLAYER_JUMP_IMPULSE)
                 self.physics_engine.apply_impulse(self.player, impulse)
+                self.player.jump_index = 0
         elif symbol in KEYMAP_DICT["Left"]:
             self.left_key_down = True
             self.update_player_speed()
