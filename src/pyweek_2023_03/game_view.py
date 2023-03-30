@@ -4,7 +4,7 @@ from bisect import bisect_left
 
 import arcade
 
-from .assets import get_tile_map_path, get_asset_path
+from .assets import get_asset_path, get_tile_map_path
 from .constants import (
     DASH_COOLDOWN,
     DASH_MOVE_IMPULSE,
@@ -21,8 +21,6 @@ from .constants import (
     SLOW_TIME_COOLDOWN,
     TILE_SCALING,
     WALL_FRICTION,
-    DASH_COOLDOWN,
-    SLOW_TIME_COOLDOWN
 )
 from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
@@ -155,10 +153,8 @@ class GameView(arcade.View):
             friction=WALL_FRICTION,
             collision_type="wall",
         )
-        self.clock_graphics: list[tuple[int, arcade.Texture]] = [
-            (i, arcade.load_texture(get_asset_path('sprites', 'player', 'slow_time', f'clock{i}.png', is_as_file=False)))
-            for i in range(5)
-        ]
+
+        # Slow time enemy update bool
 
         # Slow time enemy update bool
         self.slow_time_is_enemy_updated = False
