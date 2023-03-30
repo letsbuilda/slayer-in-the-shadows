@@ -13,9 +13,13 @@ COIN_SCALING = 0.5
 SPRITE_PIXEL_SIZE = 128
 GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
 
-# Movement speed of player, in pixels per frame
+# Dash
 MAX_DASHES = 1
-DASH_COOLDOWN = 5
+DASH_COOLDOWN = 2
+
+# Time slow
+SLOW_TIME_DURATION = 4
+SLOW_TIME_COOLDOWN = 10
 
 ENEMY_RENDER_DISTANCE = 500
 ENEMY_FOV = 0.4
@@ -50,7 +54,8 @@ KEYMAP_DICT = {
     "Jump": [arcade.key.W, arcade.key.UP, arcade.key.SPACE],
     "Left": [arcade.key.A, arcade.key.LEFT],
     "Right": [arcade.key.D, arcade.key.RIGHT],
-    "Dash": [arcade.key.L],
+    "Dash": [arcade.key.L, arcade.key.MOD_SHIFT],
+    "Slow time": [arcade.key.P],
 }
 ARCADE_KEYS_TO_NAME = {
     arcade.key.W: "W",
@@ -61,6 +66,8 @@ ARCADE_KEYS_TO_NAME = {
     arcade.key.D: "D",
     arcade.key.RIGHT: "RIGHT_ARROW",
     arcade.key.L: "L",
+    arcade.key.MOD_SHIFT: "MOD_SHIFT",
+    arcade.key.P: "P",
 }
 
 ANIMATION_FREEZE_TIME = 3

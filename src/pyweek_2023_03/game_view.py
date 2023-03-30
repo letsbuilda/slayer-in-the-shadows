@@ -1,9 +1,12 @@
 """Game View"""
 
+from bisect import bisect_left
+
 import arcade
 
-from .assets import get_tile_map_path
+from .assets import get_asset_path, get_tile_map_path
 from .constants import (
+    DASH_COOLDOWN,
     DASH_MOVE_IMPULSE,
     DEFAULT_DAMPING,
     GRAVITY,
@@ -15,6 +18,7 @@ from .constants import (
     PLAYER_MAX_VERTICAL_SPEED,
     PLAYER_MOVE_FORCE_IN_AIR,
     PLAYER_MOVE_FORCE_ON_GROUND,
+    SLOW_TIME_COOLDOWN,
     TILE_SCALING,
     WALL_FRICTION,
 )
@@ -55,6 +59,12 @@ class GameView(arcade.View):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
+
+        # Slow time enemy update bool
+        self.slow_time_is_enemy_updated = None
+
+        # Load clock graphics for slow time
+        self.clock_graphics = None
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -110,22 +120,12 @@ class GameView(arcade.View):
                 enemy = DemoEnemy(spawner.bottom, spawner.left, self)
                 enemy.generate_available_spaces(self.scene["Blocks"])
                 self.scene.add_sprite("Enemy", enemy)
-                self.physics_engine.add_sprite(
-                    enemy,
-                    friction=PLAYER_FRICTION,
-                    mass=PLAYER_MASS,
-                    moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
-                    collision_type="enemy",
-                    damping=1.0,
-                    max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
-                    max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
-                )
-
-                self.physics_engine.add_collision_handler(
-                    "player",
-                    "enemy",
-                    player_hits_enemy,
-                )
+                self.add_enemy(enemy)
+        self.physics_engine.add_collision_handler(
+            "player",
+            "enemy",
+            player_hits_enemy,
+        )
 
         self.scene.remove_sprite_list_by_name("Spawners")
 
@@ -152,6 +152,34 @@ class GameView(arcade.View):
             body_type=arcade.PymunkPhysicsEngine.STATIC,
             friction=WALL_FRICTION,
             collision_type="wall",
+        )
+
+        # Slow time enemy update bool
+
+        # Slow time enemy update bool
+        self.slow_time_is_enemy_updated = False
+
+        self.clock_graphics: list[tuple[int, arcade.Texture]] = [
+            (
+                i,
+                arcade.load_texture(
+                    get_asset_path("sprites", "player", "slow_time", f"clock{i}.png", is_as_file=False)
+                ),
+            )
+            for i in range(5)
+        ]
+
+    def add_enemy(self, enemy):
+        """Adds enemy to physics engine"""
+        self.physics_engine.add_sprite(
+            enemy,
+            friction=PLAYER_FRICTION,
+            mass=PLAYER_MASS,
+            moment=arcade.PymunkPhysicsEngine.MOMENT_INF,
+            collision_type="enemy",
+            damping=1.0,
+            max_horizontal_velocity=PLAYER_MAX_HORIZONTAL_SPEED / 2,
+            max_vertical_velocity=PLAYER_MAX_VERTICAL_SPEED,
         )
 
     def on_draw(self):
@@ -181,6 +209,44 @@ class GameView(arcade.View):
             color=arcade.csscolor.WHITE,
             font_size=18,
         )
+
+        # Draw dash cooldown background
+        arcade.draw_rectangle_filled(
+            center_x=0, center_y=self.window.height - 10, color=arcade.csscolor.ALICE_BLUE, width=250, height=10
+        )
+        # Draw dash cooldown
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height - 10,
+            color=arcade.csscolor.CORNFLOWER_BLUE,
+            width=250 * (DASH_COOLDOWN - (self.player.dash_cooldown or 0)) / DASH_COOLDOWN,
+            height=10,
+        )
+
+        # Draw slow time cooldown background
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height - 30,
+            color=arcade.csscolor.LIGHT_GOLDENROD_YELLOW,
+            width=250,
+            height=10,
+        )
+        # Draw slow down time cooldown
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height - 30,
+            color=arcade.csscolor.ORANGE_RED,
+            width=250 * (SLOW_TIME_COOLDOWN - (self.player.slow_time_cooldown or 0)) / SLOW_TIME_COOLDOWN
+            if not self.player.is_slowing_time
+            else 0,
+            height=10,
+        )
+
+        # Clock for slow time
+        if self.player.is_slowing_time:
+            # Get appropriate clock texture with the time left
+            clock_texture = self.clock_graphics[bisect_left(self.clock_graphics, (self.player.slow_time_duration,))][1]
+            clock_texture.draw_sized(self.window.width / 2, self.window.height * 3 / 4, 200, 250)
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
@@ -228,13 +294,17 @@ class GameView(arcade.View):
         elif symbol in KEYMAP_DICT["Dash"]:
             if self.player.dashes:
                 impulse = (
-                    (DASH_MOVE_IMPULSE, 0)
+                    (DASH_MOVE_IMPULSE
                     if self.player.is_facing_right
-                    else (-DASH_MOVE_IMPULSE, 0)
+                    else -DASH_MOVE_IMPULSE, 0)
                 )
                 self.physics_engine.apply_impulse(self.player, impulse)
                 self.player.use_dash()
                 self.update_player_speed()
+        elif symbol in KEYMAP_DICT["Slow time"]:
+            if not (self.player.is_slowing_time or self.player.slow_time_cooldown):
+                self.player.slow_time()
+                self.slow_time_is_enemy_updated = False
 
     # pylint: disable=unused-argument
     def on_key_release(self, key, modifiers):
@@ -306,6 +376,15 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         """Movement and game logic"""
+        # Slow time stuff
+        if self.player.is_slowing_time and not self.slow_time_is_enemy_updated:
+            for enemy in self.scene["Enemy"]:
+                self.physics_engine.remove_sprite(enemy)
+            self.slow_time_is_enemy_updated = True
+        elif self.player.slow_time_cooldown and self.slow_time_is_enemy_updated:
+            for enemy in self.scene["Enemy"]:
+                self.add_enemy(enemy)
+            self.slow_time_is_enemy_updated = False
 
         # Move the physics engine
         self.physics_engine.step()
@@ -323,7 +402,8 @@ class GameView(arcade.View):
 
         self.player.on_update(delta_time)
 
-        self.update_enemies()
+        if not self.player.is_slowing_time and not self.slow_time_is_enemy_updated:
+            self.update_enemies()
 
         self.player.last_position = self.player.position
 
