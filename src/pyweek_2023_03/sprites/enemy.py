@@ -61,9 +61,9 @@ class Enemy(Character):
 
         if self.mode == 0:
             # Find if there is any blocks between the enemy and the player
-            min_coords = min(self.center_x, player.center_x), min(self.center_y, player.center_y)
-            max_coords = max(self.center_x, player.center_x), max(self.center_y, player.center_y)
-            if not any(min_coords < (blk.center_x, blk.center_y) < max_coords for blk in blocks):
+            min_x, min_y = min(self.center_x, player.center_x), min(self.center_y, player.center_y)
+            max_x, max_y = max(self.center_x, player.center_x), max(self.center_y, player.center_y)
+            if not any(min_x < blk.center_x < max_x and min_y < blk.center_y < max_y for blk in blocks):
                 # Check if the player is in the field of view
                 # Use trig to find the angle between the horizontal and the player
                 angle = math.atan2(
