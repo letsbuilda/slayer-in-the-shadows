@@ -8,6 +8,7 @@ from ..constants import (
 )
 from .character import Character
 
+
 # pylint: disable=too-many-instance-attributes
 class Player(Character):
     """The main player The player sprite is 32x26"""

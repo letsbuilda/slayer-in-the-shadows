@@ -156,7 +156,7 @@ class GameView(arcade.View):
         ]
 
     def add_enemy(self, enemy):
-        """ Adds enemy to physics engine """
+        """Adds enemy to physics engine"""
         self.physics_engine.add_sprite(
             enemy,
             friction=PLAYER_FRICTION,
