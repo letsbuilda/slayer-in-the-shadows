@@ -1,9 +1,10 @@
 """Game View"""
 
+from bisect import bisect_left
 
 import arcade
 
-from .assets import get_tile_map_path
+from .assets import get_tile_map_path, get_asset_path
 from .constants import (
     DASH_MOVE_IMPULSE,
     DEFAULT_DAMPING,
@@ -18,6 +19,8 @@ from .constants import (
     PLAYER_MOVE_FORCE_ON_GROUND,
     TILE_SCALING,
     WALL_FRICTION,
+    DASH_COOLDOWN,
+    SLOW_TIME_COOLDOWN
 )
 from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
@@ -56,6 +59,9 @@ class GameView(arcade.View):
         # What key is pressed down?
         self.left_key_down = False
         self.right_key_down = False
+
+        # Load clock graphics for time stop
+        self.clock_graphics = None
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -142,6 +148,10 @@ class GameView(arcade.View):
             friction=WALL_FRICTION,
             collision_type="wall",
         )
+        self.clock_graphics: list[tuple[int, arcade.Texture]] = [
+            (i, arcade.load_texture(get_asset_path('sprites', 'player', 'slow_time', f'clock{i}.png', is_as_file=False)))
+            for i in range(5)
+        ]
 
     def on_draw(self):
         """Render the screen."""
@@ -170,6 +180,46 @@ class GameView(arcade.View):
             color=arcade.csscolor.WHITE,
             font_size=18,
         )
+
+        # Draw dash cooldown background
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height-10,
+            color=arcade.csscolor.ALICE_BLUE,
+            width=250,
+            height=10
+        )
+        # Draw dash cooldown
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height-10,
+            color=arcade.csscolor.CORNFLOWER_BLUE,
+            width=250 * (DASH_COOLDOWN - (self.player.dash_cooldown or 0)) / DASH_COOLDOWN,
+            height=10
+        )
+
+        # Draw slow time cooldown background
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height-30,
+            color=arcade.csscolor.LIGHT_GOLDENROD_YELLOW,
+            width=250,
+            height=10
+        )
+        # Draw slow down time cooldown
+        arcade.draw_rectangle_filled(
+            center_x=0,
+            center_y=self.window.height - 30,
+            color=arcade.csscolor.ORANGE_RED,
+            width=250 * (SLOW_TIME_COOLDOWN - (self.player.slow_time_cooldown or 0)) / SLOW_TIME_COOLDOWN,
+            height=10
+        )
+
+        # Clock for slow time
+        if self.player.is_slowing_time:
+            # Get appropriate clock texture with the time left
+            clock_texture = self.clock_graphics[bisect_left(self.clock_graphics, (self.player.slow_time_duration,))][1]
+            clock_texture.draw_sized(self.window.width / 2, self.window.height * 3/4, 200, 250)
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
@@ -215,10 +265,13 @@ class GameView(arcade.View):
             self.update_player_speed()
         elif symbol in KEYMAP_DICT["Dash"]:
             if self.player.dashes:
-                impulse = (DASH_MOVE_IMPULSE, 0) if self.player.is_facing_right else (-DASH_MOVE_IMPULSE, 0)
+                impulse = (DASH_MOVE_IMPULSE if self.player.is_facing_right else -DASH_MOVE_IMPULSE, 0)
                 self.physics_engine.apply_impulse(self.player, impulse)
                 self.player.use_dash()
                 self.update_player_speed()
+        elif symbol in KEYMAP_DICT["Slow time"]:
+            if not (self.player.is_slowing_time or self.player.slow_time_cooldown):
+                self.player.slow_time()
 
     # pylint: disable=unused-argument
     def on_key_release(self, key, modifiers):
@@ -280,6 +333,9 @@ class GameView(arcade.View):
 
     def on_update(self, delta_time):
         """Movement and game logic"""
+        # Slow time stuff
+        if self.player.is_slowing_time:
+            pass
 
         # Move the physics engine
         self.physics_engine.step()
