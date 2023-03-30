@@ -6,7 +6,7 @@ from random import choice, randint
 import arcade
 
 from ..assets import get_asset_path, get_sprite_path
-from ..constants import ENEMY_RENDER_DISTANCE
+from ..constants import ENEMY_RENDER_DISTANCE, FRAMES_PER_RAYCAST
 from .character import Character
 
 
@@ -31,6 +31,8 @@ class Enemy(Character):
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
+
+        self.raycast_cd = FRAMES_PER_RAYCAST
 
         # The position the enemy wants to be in, None if it likes where it is
         self.target_position = None
@@ -71,6 +73,11 @@ class Enemy(Character):
         distance.
         """
 
+        # Check if the enemy can check the position yet to save performance
+        if self.raycast_cd > 0:
+            self.raycast_cd -= 1
+            return False
+
         # Check if the distance between the player and the enemy is less than the enemy's render distance
         # and the enemy is in passive mode
         if (
@@ -78,6 +85,7 @@ class Enemy(Character):
             and self.mode == 0
         ):
             if self.in_fov(player):
+                self.raycast_cd = FRAMES_PER_RAYCAST
                 return self.space_clear(player, blocks)
         return False
 
