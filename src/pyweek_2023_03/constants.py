@@ -62,3 +62,5 @@ ARCADE_KEYS_TO_NAME = {
     arcade.key.RIGHT: "RIGHT_ARROW",
     arcade.key.L: "L",
 }
+
+ANIMATION_FREEZE_TIME = 3
