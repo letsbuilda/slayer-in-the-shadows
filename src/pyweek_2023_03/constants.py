@@ -23,6 +23,7 @@ SLOW_TIME_COOLDOWN = 10
 
 ENEMY_RENDER_DISTANCE = 500
 ENEMY_FOV = 0.4
+FRAMES_PER_RAYCAST = 5
 
 # --- Physics forces. Higher number, faster accelerating.
 
