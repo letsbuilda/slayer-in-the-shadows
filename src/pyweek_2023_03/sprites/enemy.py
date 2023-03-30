@@ -6,6 +6,7 @@ from random import choice, randint
 import arcade
 
 from ..assets import get_asset_path, get_sprite_path
+from ..constants import ENEMY_RENDER_DISTANCE
 from .character import Character
 
 
@@ -14,8 +15,19 @@ class Enemy(Character):
     """Base enemy class from which the various enemy types are made"""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, bottom: float, left: float, sprite: str, health: int, speed: int, weapon, game):
-        super().__init__(bottom, left, sprite, health, speed, weapon, game, "Detailed")
+    def __init__(
+        self,
+        bottom: float,
+        left: float,
+        sprite: str,
+        health: int,
+        speed: int,
+        weapon,
+        game,
+    ):
+        super().__init__(
+            bottom, left, sprite, health, speed, weapon, game, "Detailed"
+        )
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
@@ -25,7 +37,7 @@ class Enemy(Character):
 
         self.cur_movement_cd = self.movement_cd
         self.moving = False
-        self.direction = 0
+        self.direction = 1
 
         self.available_spaces = []
 
@@ -59,11 +71,37 @@ class Enemy(Character):
         distance.
         """
 
-        if self.mode == 0:
-            # Find if there is any blocks between the enemy and the player
-            min_x, min_y = min(self.center_x, player.center_x), min(self.center_y, player.center_y)
-            max_x, max_y = max(self.center_x, player.center_x), max(self.center_y, player.center_y)
-            if not any(min_x < blk.center_x < max_x and min_y < blk.center_y < max_y for blk in blocks):
+        # Check if the distance between the player and the enemy is less than the enemy's render distance
+        # and the enemy is in passive mode
+        if (
+            math.dist(player.position, self.position) < ENEMY_RENDER_DISTANCE
+            and self.mode == 0
+        ):
+            # Find if there is any blocks intersecting with the line between the enemy and the player
+            space_clear = True
+            # Calculate the direction vector from the enemy to the player
+            dx, dy = (
+                player.center_x - self.center_x,
+                player.center_y - self.center_y,
+            )
+            distance = math.sqrt(dx**2 + dy**2)
+            direction = (dx / distance, dy / distance)
+
+            # Iterate over points along the direction vector
+            step_size = 30
+            for i in range(0, int(distance), step_size):
+                x, y = (
+                    self.center_x + direction[0] * i,
+                    self.center_y + direction[1] * i,
+                )
+
+                # Check for collisions with blocks
+                for block in blocks:
+                    if block.collides_with_point((x, y)):
+                        space_clear = False
+                        break
+
+            if space_clear:
                 # Check if the player is in the field of view
                 # Use trig to find the angle between the horizontal and the player
                 angle = math.atan2(
@@ -100,7 +138,9 @@ class Enemy(Character):
 
     def generate_available_spaces(self, sprite_list):
         """Generates available spaces"""
-        self.available_spaces = [block for block in sprite_list if block.top == self.bottom]
+        self.available_spaces = [
+            block for block in sprite_list if block.top == self.bottom
+        ]
 
 
 class DemoEnemy(Enemy):
