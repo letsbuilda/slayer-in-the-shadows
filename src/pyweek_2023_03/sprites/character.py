@@ -60,7 +60,5 @@ class Character(arcade.Sprite):
         """
         self.attack_cooldown = max(self.attack_cooldown - delta_time, 0)
 
-        if self.is_invulnerable:
-            self.invulnerable_duration = max(self.invulnerable_duration - delta_time, 0)
-            if not self.invulnerable_duration:
-                self.is_invulnerable = False
+        self.invulnerable_duration = max(self.invulnerable_duration - delta_time, 0)
+        self.is_invulnerable = self.invulnerable_duration > 0

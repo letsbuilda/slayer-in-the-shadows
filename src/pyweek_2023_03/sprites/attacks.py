@@ -28,7 +28,7 @@ charge_attack = AttackSpec(
 )
 stealth_attack = AttackSpec(
     name="Stealth Attack",
-    damage=float("inf"),
+    damage=100,
     atk_type="Melee",
     charge_time=3,
     cooldown=10

@@ -38,6 +38,10 @@ class Player(Character):
         self.is_on_ground = None
         self.force = None
         self.last_position = None
+
+        self.is_charging_attack = None
+        self.charge_duration = None
+
         with get_sprite_path("player", "idle") as sprite_path:
             self.idle = [[], []]
             for i in range(2):
@@ -86,6 +90,9 @@ class Player(Character):
         self.is_on_ground = True
         self.force = (0, 0)
         self.jump_index = -1
+
+        self.is_charging_attack = False
+        self.charge_duration = 0
 
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
@@ -156,6 +163,9 @@ class Player(Character):
             self.slow_time_cooldown = max(
                 self.slow_time_cooldown - delta_time, 0
             )
+
+        if self.is_charging_attack:
+            self.charge_duration += delta_time
 
         super().on_update(delta_time)
 

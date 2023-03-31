@@ -1,7 +1,9 @@
 """Game View"""
 
 from bisect import bisect_left
+from operator import itemgetter
 from random import randint
+import math
 
 import arcade
 
@@ -22,10 +24,13 @@ from .constants import (
     SLOW_TIME_COOLDOWN,
     TILE_SCALING,
     WALL_FRICTION,
+    MELEE_RANGE,
+    SLASH_DURATION
 )
 from .handlers import player_hits_enemy
 from .sprites.enemy import DemoEnemy
 from .sprites.player import Player
+from .sprites.attacks import AttackSpec, quick_attack, charge_attack, stealth_attack
 
 
 # pylint: disable=too-many-instance-attributes
@@ -449,15 +454,53 @@ class GameView(arcade.View):
         self.player.last_position = self.player.position
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
-        print(x, y, button, modifiers)
+        # Left click
+        if button == 1:
+            self.player.is_charging_attack = True
+        # Right click
+        elif button == 4:
+            pass
 
     def on_mouse_release(self, x: int, y: int, button: int, modifiers: int):
-        print(x, y, button, modifiers)
+        # Left click
+        if button == 1:
+            self.player.is_charging_attack = False
+            match bisect_left([
+                quick_attack.charge_time, charge_attack.charge_time, stealth_attack.charge_time
+            ], self.player.charge_duration):
+                case 1:
+                    self.perform_attack(quick_attack)
+                case 2:
+                    self.perform_attack(charge_attack)
+                case 3:
+                    self.perform_attack(stealth_attack)
+                case unknown:
+                    print(f'This is impossible so idk how you got here {unknown=}')
+                    raise ValueError
+            self.player.charge_duration = 0
+        # Right click
+        elif button == 4:
+            pass
 
     def on_resize(self, width, height):
         """Resize window"""
         self.camera_sprites.resize(int(width), int(height))
         self.camera_gui.resize(int(width), int(height))
+
+    def find_enemies_in_range(self):
+        """ Returns a list of all enemies in range of player's attack """
+        min_bound, max_bound = (0, math.pi/6) if self.player.is_facing_right else (math.pi * 5/6, math.pi)
+        return [
+            enemy
+            for enemy in self.scene['Enemy']
+            if entity_dist(self.player, enemy) < MELEE_RANGE
+            and min_bound < entity_angle(self.player, enemy) < max_bound
+        ]
+
+    def perform_attack(self, attack: AttackSpec):
+        self.slash_cooldown = SLASH_DURATION
+        for enemy in self.find_enemies_in_range():
+            enemy.take_damage(attack.damage if not attack == stealth_attack or enemy.mode == 0 else float("inf"))
 
     def kill_enemy(self, enemy):
         """Called when enemy dies"""
@@ -466,3 +509,13 @@ class GameView(arcade.View):
         self.scene['Bars'].remove(enemy.health_bar.border_bar)
         self.scene['Bars'].remove(enemy.health_bar.fill_bar)
         self.scene['Bars'].remove(enemy.health_bar.remain_bar)
+
+
+def entity_dist(entity_1, entity_2) -> float:
+    """ Returns distance between the two entities """
+    return math.dist(entity_1.position, entity_2.position)
+
+
+def entity_angle(entity_1, entity_2) -> float:
+    """ Returns angle from entity_1 to entity_2 """
+    return math.atan2(entity_2.center_y - entity_1.center_y, entity_2.center_x - entity_1.center_x)
