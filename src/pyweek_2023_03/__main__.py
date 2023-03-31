@@ -5,6 +5,7 @@ from itertools import zip_longest
 import arcade
 import arcade.gui
 
+from .assets import get_asset_path
 from .constants import (
     ARCADE_KEYS_TO_NAME,
     KEYMAP_DICT,
@@ -24,6 +25,9 @@ class StartView(arcade.View):
         # a UIManager to handle the UI
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
+
+        with get_asset_path("sounds", "menu_click.wav") as path:
+            self.click_sound = arcade.load_sound(path)
 
         self.v_box = arcade.gui.UIBoxLayout()
 
@@ -50,6 +54,7 @@ class StartView(arcade.View):
         # pylint: disable=unused-argument
         @start_button.event("on_click")
         def on_click_start(event):
+            arcade.play_sound(self.click_sound)
             self.manager.disable()
             game_view = GameView()
             game_view.setup()
@@ -58,6 +63,7 @@ class StartView(arcade.View):
         # pylint: disable=unused-argument
         @settings_button.event("on_click")
         def on_click_settings(event):
+            arcade.play_sound(self.click_sound)
             self.manager.disable()
             settings_view = SettingsView()
             self.window.show_view(settings_view)
@@ -65,9 +71,14 @@ class StartView(arcade.View):
         # pylint: disable=unused-argument
         @quit_button.event("on_click")
         def on_click_quit(event):
+            arcade.play_sound(self.click_sound)
             arcade.exit()
 
-        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="center_x", anchor_y="center_y", child=self.v_box
+            )
+        )
 
     def on_show_view(self):
         """This is run once when we switch to this view"""
@@ -93,24 +104,33 @@ class SettingsView(arcade.View):
         self.manager = arcade.gui.UIManager()
         self.manager.enable()
 
+        with get_asset_path("sounds", "menu_click.wav") as path:
+            self.click_sound = arcade.load_sound(path)
+
         self.v_box = arcade.gui.UIBoxLayout()
 
-        self.fs_button = arcade.gui.UIFlatButton(text="Make fullscreen", width=200)
+        self.fs_button = arcade.gui.UIFlatButton(
+            text="Make fullscreen", width=200
+        )
         self.v_box.add(self.fs_button.with_space_around(bottom=20))
 
         # IDK what this is meant to do so this is just placeholder for now
-        self.audio_button = arcade.gui.UIFlatButton(text="Audio button", width=200)
+        self.audio_button = arcade.gui.UIFlatButton(
+            text="Audio button", width=200
+        )
         self.v_box.add(self.audio_button.with_space_around(bottom=20))
 
-        actions, *keybinds = KEYMAP_DICT.keys(), *zip_longest(*KEYMAP_DICT.values(), fillvalue="")
+        actions, *keybinds = KEYMAP_DICT.keys(), *zip_longest(
+            *KEYMAP_DICT.values(), fillvalue=""
+        )
         key_box = arcade.gui.UIBoxLayout(vertical=False)
         # Action box
         action_box = arcade.gui.UIBoxLayout(size_hint=0.8)
         for action in actions:
             action_box.add(
-                arcade.gui.UILabel(text=action, font_size=30, text_color=arcade.color.BLACK).with_space_around(
-                    bottom=20
-                )
+                arcade.gui.UILabel(
+                    text=action, font_size=30, text_color=arcade.color.BLACK
+                ).with_space_around(bottom=20)
             )
         key_box.add(action_box.with_space_around(left=10, right=10))
 
@@ -120,9 +140,9 @@ class SettingsView(arcade.View):
             column_box = arcade.gui.UIBoxLayout(size_hint=0.1)
             for keybind in column:
                 column_box.add(
-                    arcade.gui.UIFlatButton(text=ARCADE_KEYS_TO_NAME.get(keybind, ""), width=200).with_space_around(
-                        bottom=20
-                    )
+                    arcade.gui.UIFlatButton(
+                        text=ARCADE_KEYS_TO_NAME.get(keybind, ""), width=200
+                    ).with_space_around(bottom=20)
                 )
             key_box.add(column_box.with_space_around(left=10, right=10))
 
@@ -132,16 +152,27 @@ class SettingsView(arcade.View):
         @self.fs_button.event("on_click")
         def on_flip_fullscreen(event):
             self.window.set_fullscreen(not self.window.fullscreen)
-            self.fs_button.text = ({self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}).pop()
+            self.fs_button.text = (
+                {self.fs_button.text} ^ {"Make fullscreen", "Minimize screen"}
+            ).pop()
 
-        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="center_x", anchor_y="center_y", child=self.v_box
+            )
+        )
 
         return_button = arcade.gui.UIFlatButton(text="<-", width=100)
-        self.manager.add(arcade.gui.UIAnchorWidget(anchor_x="left", anchor_y="top", child=return_button))
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="left", anchor_y="top", child=return_button
+            )
+        )
 
         # pylint: disable=unused-argument
         @return_button.event("on_click")
         def on_click_return(event):
+            arcade.play_sound(self.click_sound)
             self.manager.disable()
             start_view = StartView()
             self.window.show_view(start_view)
@@ -161,7 +192,9 @@ class SettingsView(arcade.View):
 
 def main():
     """Main function"""
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True)
+    window = arcade.Window(
+        SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE, resizable=True
+    )
     start_view = StartView()
     window.show_view(start_view)
     arcade.run()
