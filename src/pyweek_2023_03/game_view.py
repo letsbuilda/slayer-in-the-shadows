@@ -1,6 +1,7 @@
 """Game View"""
 
 from bisect import bisect_left
+from random import randint
 
 import arcade
 
@@ -74,10 +75,14 @@ class GameView(arcade.View):
         """Set up the game here. Call this function to restart the game."""
 
         # Setup the Cameras
-        self.camera_sprites = arcade.Camera(self.window.width, self.window.height)
+        self.camera_sprites = arcade.Camera(
+            self.window.width, self.window.height
+        )
         self.camera_gui = arcade.Camera(self.window.width, self.window.height)
 
-        self.physics_engine = arcade.PymunkPhysicsEngine((0, -GRAVITY), damping=DEFAULT_DAMPING)
+        self.physics_engine = arcade.PymunkPhysicsEngine(
+            (0, -GRAVITY), damping=DEFAULT_DAMPING
+        )
 
         # Name of map file to load
 
@@ -92,7 +97,9 @@ class GameView(arcade.View):
 
         # Read in the tiled map
         with get_tile_map_path("inf_demo") as map_path:
-            self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
+            self.tile_map = arcade.load_tilemap(
+                map_path, TILE_SCALING, layer_options
+            )
 
         # Initialize Scene with our TileMap, this will automatically add all layers
         # from the map as SpriteLists in the scene in the proper order.
@@ -103,7 +110,9 @@ class GameView(arcade.View):
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left, 100, 30, self)
+                self.player = Player(
+                    spawner.bottom, spawner.left, 100, 30, self
+                )
                 self.scene.add_sprite("Player", self.player)
                 self.player.setup_player()
             elif entity_id == 1:
@@ -156,7 +165,13 @@ class GameView(arcade.View):
             (
                 i,
                 arcade.load_texture(
-                    get_asset_path("sprites", "player", "slow_time", f"clock{i}.png", is_as_file=False)
+                    get_asset_path(
+                        "sprites",
+                        "player",
+                        "slow_time",
+                        f"clock{i}.png",
+                        is_as_file=False,
+                    )
                 ),
             )
             for i in range(5)
@@ -205,14 +220,20 @@ class GameView(arcade.View):
 
         # Draw dash cooldown background
         arcade.draw_rectangle_filled(
-            center_x=0, center_y=self.window.height - 10, color=arcade.csscolor.ALICE_BLUE, width=250, height=10
+            center_x=0,
+            center_y=self.window.height - 10,
+            color=arcade.csscolor.ALICE_BLUE,
+            width=250,
+            height=10,
         )
         # Draw dash cooldown
         arcade.draw_rectangle_filled(
             center_x=0,
             center_y=self.window.height - 10,
             color=arcade.csscolor.CORNFLOWER_BLUE,
-            width=250 * (DASH_COOLDOWN - (self.player.dash_cooldown or 0)) / DASH_COOLDOWN,
+            width=250
+            * (DASH_COOLDOWN - (self.player.dash_cooldown or 0))
+            / DASH_COOLDOWN,
             height=10,
         )
 
@@ -229,7 +250,9 @@ class GameView(arcade.View):
             center_x=0,
             center_y=self.window.height - 30,
             color=arcade.csscolor.ORANGE_RED,
-            width=250 * (SLOW_TIME_COOLDOWN - (self.player.slow_time_cooldown or 0)) / SLOW_TIME_COOLDOWN
+            width=250
+            * (SLOW_TIME_COOLDOWN - (self.player.slow_time_cooldown or 0))
+            / SLOW_TIME_COOLDOWN
             if not self.player.is_slowing_time
             else 0,
             height=10,
@@ -238,8 +261,14 @@ class GameView(arcade.View):
         # Clock for slow time
         if self.player.is_slowing_time:
             # Get appropriate clock texture with the time left
-            clock_texture = self.clock_graphics[bisect_left(self.clock_graphics, (self.player.slow_time_duration,))][1]
-            clock_texture.draw_sized(self.window.width / 2, self.window.height * 3 / 4, 200, 250)
+            clock_texture = self.clock_graphics[
+                bisect_left(
+                    self.clock_graphics, (self.player.slow_time_duration,)
+                )
+            ][1]
+            clock_texture.draw_sized(
+                self.window.width / 2, self.window.height * 3 / 4, 200, 250
+            )
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
@@ -278,6 +307,9 @@ class GameView(arcade.View):
                 impulse = (0, PLAYER_JUMP_IMPULSE)
                 self.physics_engine.apply_impulse(self.player, impulse)
                 self.player.jump_index = 0
+                arcade.play_sound(
+                    self.player.whoosh, 0.5, speed=randint(100, 150) / 100
+                )
         elif symbol in KEYMAP_DICT["Left"]:
             self.left_key_down = True
             self.update_player_speed()
@@ -286,12 +318,19 @@ class GameView(arcade.View):
             self.update_player_speed()
         elif symbol in KEYMAP_DICT["Dash"]:
             if self.player.dashes:
-                impulse = (DASH_MOVE_IMPULSE if self.player.is_facing_right else -DASH_MOVE_IMPULSE, 0)
+                impulse = (
+                    DASH_MOVE_IMPULSE
+                    if self.player.is_facing_right
+                    else -DASH_MOVE_IMPULSE,
+                    0,
+                )
                 self.physics_engine.apply_impulse(self.player, impulse)
                 self.player.use_dash()
                 self.update_player_speed()
         elif symbol in KEYMAP_DICT["Slow time"]:
-            if not (self.player.is_slowing_time or self.player.slow_time_cooldown):
+            if not (
+                self.player.is_slowing_time or self.player.slow_time_cooldown
+            ):
                 self.player.slow_time()
                 self.slow_time_is_enemy_updated = False
 
@@ -308,8 +347,12 @@ class GameView(arcade.View):
     def center_camera_to_player(self):
         """Centers the camera to the player"""
         # Find where player is, then calculate lower left corner from that
-        screen_center_x = self.player.center_x - (self.camera_sprites.viewport_width / 2)
-        screen_center_y = self.player.center_y - (self.camera_sprites.viewport_height / 2)
+        screen_center_x = self.player.center_x - (
+            self.camera_sprites.viewport_width / 2
+        )
+        screen_center_y = self.player.center_y - (
+            self.camera_sprites.viewport_height / 2
+        )
 
         # Set some limits on how far we scroll
         screen_center_x = max(screen_center_x, 0)
@@ -342,7 +385,9 @@ class GameView(arcade.View):
                 self.physics_engine.set_friction(enemy, 0)
                 self.physics_engine.apply_force(enemy, force)
 
-                if enemy.target_position[1] > enemy.position[1] and self.physics_engine.is_on_ground(enemy):
+                if enemy.target_position[1] > enemy.position[
+                    1
+                ] and self.physics_engine.is_on_ground(enemy):
                     impulse = (0, PLAYER_JUMP_IMPULSE)
                     self.physics_engine.apply_impulse(enemy, impulse)
 
@@ -377,7 +422,10 @@ class GameView(arcade.View):
         self.physics_engine.step()
         self.physics_engine.apply_force(self.player, self.player.force)
 
-        if self.physics_engine.is_on_ground(self.player) ^ self.player.is_on_ground:
+        if (
+            self.physics_engine.is_on_ground(self.player)
+            ^ self.player.is_on_ground
+        ):
             self.player.is_on_ground ^= True
             self.update_player_speed()
 
@@ -386,7 +434,10 @@ class GameView(arcade.View):
 
         self.player.on_update(delta_time)
 
-        if not self.player.is_slowing_time and not self.slow_time_is_enemy_updated:
+        if (
+            not self.player.is_slowing_time
+            and not self.slow_time_is_enemy_updated
+        ):
             self.update_enemies()
 
         self.player.last_position = self.player.position
