@@ -2,15 +2,15 @@
 import arcade
 
 # Screen
-SCREEN_WIDTH = 24 * 16 
-SCREEN_HEIGHT = 15 * 16 
+SCREEN_WIDTH = 24 * 64
+SCREEN_HEIGHT = 15 * 64
 SCREEN_TITLE = "pyweek-2023-03"
 
 # Constants used to scale our sprites from their original size
 CHARACTER_SCALING = 1
-TILE_SCALING = 1 
+TILE_SCALING = 2
 COIN_SCALING = 0.5
-SPRITE_PIXEL_SIZE = 16 
+SPRITE_PIXEL_SIZE = 32
 GRID_PIXEL_SIZE = SPRITE_PIXEL_SIZE * TILE_SCALING
 
 # Dash
