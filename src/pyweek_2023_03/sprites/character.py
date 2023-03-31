@@ -11,7 +11,17 @@ class Character(arcade.Sprite):
     """Base enemy class from which the various enemy types are made"""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, bottom, left, sprite: str, health: int, speed: int, game, hit_box_alg=None, character_scaling=constants.CHARACTER_SCALING):
+    def __init__(
+        self,
+        bottom,
+        left,
+        sprite: str,
+        health: int,
+        speed: int,
+        game,
+        hit_box_alg=None,
+        character_scaling=constants.CHARACTER_SCALING,
+    ):
         if isinstance(sprite, str):
             sprite_type, sprite_name = sprite.split("/")
 

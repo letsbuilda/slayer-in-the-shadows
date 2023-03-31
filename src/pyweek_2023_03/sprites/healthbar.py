@@ -33,4 +33,4 @@ class HealthBar:
         self.remain_bar.bottom = self.character.top + self.offset + self.border
         self.border_bar.center_x = self.character.center_x
         self.fill_bar.center_x = self.character.center_x
-        self.remain_bar.center_x = self.character.center_x - (self.remain_bar_width-self.remain_bar.width)/2
+        self.remain_bar.center_x = self.character.center_x - (self.remain_bar_width - self.remain_bar.width) / 2

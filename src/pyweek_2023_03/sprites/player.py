@@ -1,15 +1,15 @@
 """The player"""
 import arcade
 
+from ..assets import get_sprite_path
 from ..constants import (
+    ANIMATION_FREEZE_TIME,
     DASH_COOLDOWN,
     MAX_DASHES,
     SLOW_TIME_COOLDOWN,
     SLOW_TIME_DURATION,
-    ANIMATION_FREEZE_TIME
 )
 from .character import Character
-from ..assets import get_sprite_path
 
 
 # pylint: disable=too-many-instance-attributes
@@ -34,16 +34,22 @@ class Player(Character):
         with get_sprite_path("player", "idle") as sprite_path:
             self.idle = [[], []]
             for i in range(2):
-                self.idle[i] = arcade.load_textures(sprite_path, [(j*32, 0, 32, 26) for j in range(4)], bool(i), hit_box_algorithm="Detailed")
+                self.idle[i] = arcade.load_textures(
+                    sprite_path, [(j * 32, 0, 32, 26) for j in range(4)], bool(i), hit_box_algorithm="Detailed"
+                )
             self.texture = self.idle[0][0]
         with get_sprite_path("player", "move") as sprite_path:
             self.move = [[], []]
             for i in range(2):
-                self.move[i] = arcade.load_textures(sprite_path, [(j*36, 0, 36, 26) for j in range(3)], bool(i), hit_box_algorithm="Detailed")
+                self.move[i] = arcade.load_textures(
+                    sprite_path, [(j * 36, 0, 36, 26) for j in range(3)], bool(i), hit_box_algorithm="Detailed"
+                )
         with get_sprite_path("player", "jump") as sprite_path:
             self.jump = [[], []]
             for i in range(2):
-                self.jump[i] = arcade.load_textures(sprite_path, [(j*34, 0, 34, 30) for j in range(8)], bool(i), hit_box_algorithm="Detailed")
+                self.jump[i] = arcade.load_textures(
+                    sprite_path, [(j * 34, 0, 34, 30) for j in range(8)], bool(i), hit_box_algorithm="Detailed"
+                )
 
         self.bottom = bottom
         self.left = left
@@ -70,15 +76,19 @@ class Player(Character):
                 if self.cur_texture_index >= 4 * ANIMATION_FREEZE_TIME * 3:
                     self.cur_texture_index = 0
                 if self.force == (0, 0):
-                    self.texture = self.idle[int(not self.is_facing_right)][self.cur_texture_index // (3 * ANIMATION_FREEZE_TIME)]
+                    self.texture = self.idle[int(not self.is_facing_right)][
+                        self.cur_texture_index // (3 * ANIMATION_FREEZE_TIME)
+                    ]
                 else:
-                    self.texture = self.move[int(not self.is_facing_right)][self.cur_texture_index // (4 * ANIMATION_FREEZE_TIME)]
+                    self.texture = self.move[int(not self.is_facing_right)][
+                        self.cur_texture_index // (4 * ANIMATION_FREEZE_TIME)
+                    ]
             else:
                 self.texture = self.jump[int(not self.is_facing_right)][7]
         else:
-            self.texture = self.jump[int(not self.is_facing_right)][self.jump_index // (ANIMATION_FREEZE_TIME+3)]
+            self.texture = self.jump[int(not self.is_facing_right)][self.jump_index // (ANIMATION_FREEZE_TIME + 3)]
             self.jump_index += 1
-            if self.jump_index >= (ANIMATION_FREEZE_TIME+3) * 5:
+            if self.jump_index >= (ANIMATION_FREEZE_TIME + 3) * 5:
                 self.jump_index = -1
 
     def use_dash(self):
