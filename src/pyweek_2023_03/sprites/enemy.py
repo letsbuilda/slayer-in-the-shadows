@@ -8,6 +8,7 @@ import arcade
 from ..assets import get_asset_path, get_sprite_path
 from ..constants import ENEMY_RENDER_DISTANCE, FRAMES_PER_RAYCAST
 from .character import Character
+from .attacks import AttackSpec, default_enemy_attacks
 
 
 # pylint: disable=too-many-instance-attributes
@@ -22,9 +23,10 @@ class Enemy(Character):
         sprite: str,
         health: int,
         speed: int,
-        game,
+        attacks: list[AttackSpec],
+        game
     ):
-        super().__init__(bottom, left, sprite, health, speed, game, "Detailed")
+        super().__init__(bottom, left, sprite, health, speed, attacks, game, "Detailed")
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
@@ -159,4 +161,4 @@ class DemoEnemy(Enemy):
     def __init__(self, bottom: float, left: float, game):
         """DemoEnemy Init"""
         with get_sprite_path("enemies", "realistic_enemy") as path:
-            super().__init__(bottom, left, path, 100, 20, game)
+            super().__init__(bottom, left, path, 100, 20, default_enemy_attacks, game)

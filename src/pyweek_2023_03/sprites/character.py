@@ -5,6 +5,7 @@ import arcade
 from .. import constants
 from ..assets import get_sprite_path
 from .healthbar import HealthBar
+from .attacks import AttackSpec
 
 
 class Character(arcade.Sprite):
@@ -15,9 +16,10 @@ class Character(arcade.Sprite):
         self,
         bottom,
         left,
-        sprite: str,
+        sprite: str | None,
         health: int,
         speed: int,
+        attacks: list[AttackSpec],
         game,
         hit_box_alg=None,
         character_scaling=constants.CHARACTER_SCALING,
@@ -37,6 +39,7 @@ class Character(arcade.Sprite):
         self.health = health
         self.max_health = health
         self.speed = speed
+        self.attacks = attacks
 
         self.game = game
 

@@ -10,6 +10,7 @@ from ..constants import (
     SLOW_TIME_DURATION,
 )
 from .character import Character
+from .attacks import player_attacks
 
 
 # pylint: disable=too-many-instance-attributes
@@ -18,7 +19,7 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, health: int, speed: int, game):
-        super().__init__(bottom, left, None, health, speed, game, character_scaling=2)
+        super().__init__(bottom, left, None, health, speed, player_attacks, game, character_scaling=2)
         self.jump_index = None
         self.dashes = None
         self.dash_cooldown = None

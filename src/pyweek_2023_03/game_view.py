@@ -103,7 +103,7 @@ class GameView(arcade.View):
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
-                self.player = Player(spawner.bottom, spawner.left, 100, 30, self)
+                self.player = Player(spawner.bottom, spawner.left, 300, 30, self)
                 self.scene.add_sprite("Player", self.player)
                 self.player.setup_player()
             elif entity_id == 1:
