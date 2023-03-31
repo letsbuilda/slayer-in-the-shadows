@@ -4,13 +4,24 @@ import arcade
 # pylint: disable=no-name-in-module
 from .. import constants
 from ..assets import get_sprite_path
+from .healthbar import HealthBar
 
 
 class Character(arcade.Sprite):
     """Base enemy class from which the various enemy types are made"""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, bottom, left, sprite: str, health: int, speed: int, game, hit_box_alg=None, character_scaling=constants.CHARACTER_SCALING):
+    def __init__(
+        self,
+        bottom,
+        left,
+        sprite: str,
+        health: int,
+        speed: int,
+        game,
+        hit_box_alg=None,
+        character_scaling=constants.CHARACTER_SCALING,
+    ):
         if isinstance(sprite, str):
             sprite_type, sprite_name = sprite.split("/")
 
@@ -24,6 +35,18 @@ class Character(arcade.Sprite):
             self.left = left
 
         self.health = health
+        self.max_health = health
         self.speed = speed
 
         self.game = game
+
+        self.health_bar = HealthBar(self)
+
+    def take_damage(self, damage: int):
+        """Changes health bar"""
+        self.health -= damage
+        self.health_bar.update_health()
+
+    def update(self):
+        """Helper"""
+        self.health_bar.update()

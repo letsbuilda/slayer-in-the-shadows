@@ -24,9 +24,7 @@ class Enemy(Character):
         speed: int,
         game,
     ):
-        super().__init__(
-            bottom, left, sprite, health, speed, game, "Detailed"
-        )
+        super().__init__(bottom, left, sprite, health, speed, game, "Detailed")
 
         # Time (in seconds) until the enemy moves again
         self.movement_cd = randint(3, 8)
@@ -79,18 +77,12 @@ class Enemy(Character):
             return False
 
         # If neither move, nothing changed
-        if (
-            player.last_position == player.position
-            or self.position == self.last_position
-        ):
+        if player.last_position == player.position or self.position == self.last_position:
             return False
 
         # Check if the distance between the player and the enemy is less than the enemy's render distance
         # and the enemy is in passive mode
-        if (
-            math.dist(player.position, self.position) < ENEMY_RENDER_DISTANCE
-            and self.mode == 0
-        ):
+        if math.dist(player.position, self.position) < ENEMY_RENDER_DISTANCE and self.mode == 0:
             if self.in_fov(player):
                 self.raycast_cd = FRAMES_PER_RAYCAST
                 return self.space_clear(player, blocks)
@@ -121,24 +113,24 @@ class Enemy(Character):
     def space_clear(self, player, blocks):
         """Checks if the space is clear between an enemy and the player."""
 
-        dx, dy = (
+        delta_x, delta_y = (
             player.center_x - self.center_x,
             player.center_y - self.center_y,
         )
-        distance = math.sqrt(dx**2 + dy**2)
-        direction = (dx / distance, dy / distance)
+        distance = math.sqrt(delta_x**2 + delta_y**2)
+        direction = (delta_x / distance, delta_y / distance)
 
         # Iterate over points along the direction vector
         step_size = 30
         for i in range(0, int(distance), step_size):
-            x, y = (
+            pos_x, pos_y = (
                 self.center_x + direction[0] * i,
                 self.center_y + direction[1] * i,
             )
 
             # Check for collisions with blocks
             for block in blocks:
-                if block.collides_with_point((x, y)):
+                if block.collides_with_point((pos_x, pos_y)):
                     return False
 
         return True
@@ -158,9 +150,7 @@ class Enemy(Character):
 
     def generate_available_spaces(self, sprite_list):
         """Generates available spaces"""
-        self.available_spaces = [
-            block for block in sprite_list if block.top == self.bottom
-        ]
+        self.available_spaces = [block for block in sprite_list if block.top == self.bottom]
 
 
 class DemoEnemy(Enemy):
