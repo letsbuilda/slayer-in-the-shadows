@@ -104,6 +104,8 @@ class GameView(arcade.View):
         # from the map as SpriteLists in the scene in the proper order.
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
+        self.scene.add_sprite_list("Bars")
+
         for spawner in self.scene.get_sprite_list("Spawners"):
             entity_id = spawner.properties["tile_id"]
             if entity_id == 0:
@@ -128,6 +130,9 @@ class GameView(arcade.View):
         )
 
         self.scene.remove_sprite_list_by_name("Spawners")
+
+        self.player.update()
+        self.scene.get_sprite_list("Enemy").update()
 
         # Set the background color
         if self.tile_map.background_color:
@@ -247,6 +252,7 @@ class GameView(arcade.View):
             # Get appropriate clock texture with the time left
             clock_texture = self.clock_graphics[bisect_left(self.clock_graphics, (self.player.slow_time_duration,))][1]
             clock_texture.draw_sized(self.window.width / 2, self.window.height * 3 / 4, 200, 250)
+
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
@@ -385,6 +391,10 @@ class GameView(arcade.View):
             for enemy in self.scene["Enemy"]:
                 self.add_enemy(enemy)
             self.slow_time_is_enemy_updated = False
+
+        # Health bar
+        self.scene['Enemy'].update()
+        self.player.update()
 
         # Move the physics engine
         self.physics_engine.step()
