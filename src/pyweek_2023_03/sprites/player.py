@@ -109,7 +109,9 @@ class Player(Character):
         self.is_slowing_time = True
 
     def on_update(self, delta_time: float = 1 / 60):
-        """Reset dash after 1 second"""
+        """
+        Time related cooldowns like attack and invulnerability
+        """
         # Dash
         # If still on cooldown
         if self.dash_cooldown:

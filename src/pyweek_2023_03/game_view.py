@@ -391,7 +391,21 @@ class GameView(arcade.View):
 
         self.player.last_position = self.player.position
 
+    def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
+        print(x, y, button, modifiers)
+
+    def on_mouse_release(self, x: int, y: int, button: int, modifiers: int):
+        print(x, y, button, modifiers)
+
     def on_resize(self, width, height):
         """Resize window"""
         self.camera_sprites.resize(int(width), int(height))
         self.camera_gui.resize(int(width), int(height))
+
+    def kill_enemy(self, enemy):
+        """Called when enemy dies"""
+        self.scene['Enemy'].remove(enemy)
+        self.physics_engine.remove_sprite(enemy)
+        self.scene['Bars'].remove(enemy.health_bar.border_bar)
+        self.scene['Bars'].remove(enemy.health_bar.fill_bar)
+        self.scene['Bars'].remove(enemy.health_bar.remain_bar)
