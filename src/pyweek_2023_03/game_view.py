@@ -92,7 +92,7 @@ class GameView(arcade.View):
 
         # Read in the tiled map
         with get_tile_map_path("inf_demo") as map_path:
-            self.tile_map = arcade.load_tilemap(map_path, TILE_SCALING, layer_options)
+            self.tile_map = arcade.load_tilemap(map_path, 1, layer_options)
 
         # Initialize Scene with our TileMap, this will automatically add all layers
         # from the map as SpriteLists in the scene in the proper order.
