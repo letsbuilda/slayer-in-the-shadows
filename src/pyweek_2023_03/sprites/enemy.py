@@ -6,7 +6,7 @@ from random import choice, randint
 import arcade
 
 from ..assets import get_asset_path, get_sprite_path
-from ..constants import ENEMY_RENDER_DISTANCE, FRAMES_PER_RAYCAST
+from ..constants import ENEMY_RENDER_DISTANCE, FRAMES_PER_RAYCAST, INVULNERABILITY_DURATION
 from .character import Character
 from .attacks import AttackSpec, default_enemy_attacks
 
@@ -59,6 +59,8 @@ class Enemy(Character):
                 self.target_position = self.find_new_spot()
                 self.moving = True
                 self.cur_movement_cd = self.movement_cd
+
+        super().on_update(delta_time)
 
     def look_for(self, player, blocks):
         """
@@ -153,6 +155,17 @@ class Enemy(Character):
     def generate_available_spaces(self, sprite_list):
         """Generates available spaces"""
         self.available_spaces = [block for block in sprite_list if block.top == self.bottom]
+
+    def take_damage(self, damage: int):
+        """Handles damage taking"""
+        if not self.is_invulnerable:
+            self.health -= damage
+            self.is_invulnerable = True
+            self.invulnerable_duration = INVULNERABILITY_DURATION
+            if self.health <= 0:
+                self.game.kill_enemy(self)
+                return
+            self.health_bar.update_health()
 
 
 class DemoEnemy(Enemy):

@@ -23,7 +23,6 @@ class Character(arcade.Sprite):
         game,
         hit_box_alg: str | None = None,
         character_scaling=constants.CHARACTER_SCALING,
-        invulnerability_cooldown: int = 1
     ):
         if isinstance(sprite, str):
             sprite_type, sprite_name = sprite.split("/")
@@ -45,18 +44,11 @@ class Character(arcade.Sprite):
         self.game = game
 
         self.health_bar = HealthBar(self)
-        self.invulnerability_cooldown = invulnerability_cooldown
+
+        self.attack_cooldown = 0
+
         self.is_invulnerable = False
         self.invulnerable_duration = 0
-
-    def take_damage(self, damage: int):
-        """Changes health bar"""
-        if not self.is_invulnerable:
-            self.health -= damage
-            if self.health <= 0:
-                self.game.kill_enemy(self)
-                return
-            self.health_bar.update_health()
 
     def update(self):
         """Health bar"""
@@ -66,3 +58,9 @@ class Character(arcade.Sprite):
         """
         Time related cooldowns like attack and invulnerability
         """
+        self.attack_cooldown = max(self.attack_cooldown - delta_time, 0)
+
+        if self.is_invulnerable:
+            self.invulnerable_duration = max(self.invulnerable_duration - delta_time, 0)
+            if not self.invulnerable_duration:
+                self.is_invulnerable = False

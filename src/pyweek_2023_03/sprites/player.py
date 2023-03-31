@@ -11,6 +11,7 @@ from ..constants import (
     MAX_DASHES,
     SLOW_TIME_COOLDOWN,
     SLOW_TIME_DURATION,
+    INVULNERABILITY_DURATION,
 )
 from .character import Character
 from .attacks import player_attacks
@@ -155,3 +156,16 @@ class Player(Character):
             self.slow_time_cooldown = max(
                 self.slow_time_cooldown - delta_time, 0
             )
+
+        super().on_update(delta_time)
+
+    def take_damage(self, damage: int):
+        """Handles damage taking"""
+        if not self.is_invulnerable:
+            self.health -= damage
+            self.is_invulnerable = True
+            self.invulnerable_duration = INVULNERABILITY_DURATION
+            if self.health <= 0:
+                self.game.setup()
+                return
+            self.health_bar.update_health()

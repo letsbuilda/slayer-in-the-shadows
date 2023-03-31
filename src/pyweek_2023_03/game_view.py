@@ -177,6 +177,9 @@ class GameView(arcade.View):
             for i in range(5)
         ]
 
+        self.left_key_down = False
+        self.right_key_down = False
+
     def add_enemy(self, enemy):
         """Adds enemy to physics engine"""
         self.physics_engine.add_sprite(
@@ -417,6 +420,9 @@ class GameView(arcade.View):
         # Health bar
         self.scene["Enemy"].update()
         self.player.update()
+
+        self.player.on_update(delta_time)
+        self.scene["Enemy"].on_update(delta_time)
 
         # Move the physics engine
         self.physics_engine.step()
