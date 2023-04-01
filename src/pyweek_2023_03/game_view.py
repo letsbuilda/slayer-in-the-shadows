@@ -1,13 +1,12 @@
 """Game View"""
 
 from bisect import bisect_left
-from operator import itemgetter
 from random import randint
 import math
 
 import arcade
 
-from .assets import get_asset_path, get_tile_map_path
+from .assets import get_asset_path, get_tile_map_path, get_sprite_path
 from .constants import (
     DASH_COOLDOWN,
     DASH_MOVE_IMPULSE,
@@ -74,6 +73,8 @@ class GameView(arcade.View):
 
         # Player attack cooldown
         self.slash_cooldown = 0
+
+        self.slash_sprite = None
 
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -188,6 +189,9 @@ class GameView(arcade.View):
         self.left_key_down = False
         self.right_key_down = False
 
+        self.slash_cooldown = 0
+        self.slash_sprite = None
+
     def add_enemy(self, enemy):
         """Adds enemy to physics engine"""
         self.physics_engine.add_sprite(
@@ -280,6 +284,9 @@ class GameView(arcade.View):
             clock_texture.draw_sized(
                 self.window.width / 2, self.window.height * 3 / 4, 200, 250
             )
+
+        if self.slash_sprite:
+            self.slash_sprite.draw()
 
     def update_player_speed(self):
         """Calculate speed based on the keys pressed"""
@@ -458,6 +465,9 @@ class GameView(arcade.View):
 
         self.player.last_position = self.player.position
 
+        if not self.slash_cooldown:
+            self.slash_sprite = None
+
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         # Left click
         if button == 1 and not self.slash_cooldown:
@@ -468,7 +478,7 @@ class GameView(arcade.View):
 
     def on_mouse_release(self, x: int, y: int, button: int, modifiers: int):
         # Left click
-        if button == 1:
+        if button == 1 and not self.slash_cooldown:
             self.player.is_charging_attack = False
             match bisect_left([
                 quick_attack.charge_time, charge_attack.charge_time, stealth_attack.charge_time
@@ -510,11 +520,18 @@ class GameView(arcade.View):
         self.slash_cooldown = SLASH_DURATION
         for enemy in self.find_enemies_in_range():
             enemy.take_damage(attack.damage if not attack == stealth_attack or enemy.mode == 0 else float("inf"))
+        with get_sprite_path('attacks', 'slash') as file:
+            self.slash_sprite = arcade.Sprite(file, 0.4*TILE_SCALING)
+            self.slash_sprite.center_x = self.player.center_x + 50 * (1 if self.player.is_facing_right else -1)
+            self.slash_sprite.center_y = self.player.center_y
 
     def kill_enemy(self, enemy):
         """Called when enemy dies"""
         self.scene['Enemy'].remove(enemy)
-        self.physics_engine.remove_sprite(enemy)
+        try:
+            self.physics_engine.remove_sprite(enemy)
+        except KeyError:  # Time stop
+            pass
         self.scene['Bars'].remove(enemy.health_bar.border_bar)
         self.scene['Bars'].remove(enemy.health_bar.fill_bar)
         self.scene['Bars'].remove(enemy.health_bar.remain_bar)
