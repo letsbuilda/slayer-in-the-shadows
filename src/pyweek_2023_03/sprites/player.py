@@ -15,6 +15,7 @@ from ..constants import (
 )
 from .character import Character
 from .attacks import player_attacks
+from .bars import ChargeBar
 
 
 # pylint: disable=too-many-instance-attributes
@@ -77,6 +78,8 @@ class Player(Character):
         with get_asset_path("sounds", "whoosh.wav") as soundfile:
             self.whoosh = arcade.load_sound(soundfile)
 
+        self.charge_bar = ChargeBar(self)
+
     def setup_player(self):
         """Setup the player"""
         self.dashes = MAX_DASHES
@@ -135,6 +138,11 @@ class Player(Character):
         """
         self.slow_time_duration = SLOW_TIME_DURATION
         self.is_slowing_time = True
+
+    def update(self):
+        """ Updates player """
+        super().update()
+        self.charge_bar.update()
 
     def on_update(self, delta_time: float = 1 / 60):
         """

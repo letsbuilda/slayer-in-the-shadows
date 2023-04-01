@@ -4,7 +4,7 @@ import arcade
 # pylint: disable=no-name-in-module
 from .. import constants
 from ..assets import get_sprite_path
-from .healthbar import HealthBar
+from .bars import HealthBar
 from .attacks import AttackSpec
 
 

@@ -72,6 +72,9 @@ class GameView(arcade.View):
         # Load clock graphics for slow time
         self.clock_graphics = None
 
+        # Player attack cooldown
+        self.slash_cooldown = 0
+
     def on_show_view(self):
         arcade.set_background_color(arcade.csscolor.BLACK)
         arcade.set_viewport(0, self.window.width, 0, self.window.height)
@@ -429,6 +432,8 @@ class GameView(arcade.View):
         self.player.on_update(delta_time)
         self.scene["Enemy"].on_update(delta_time)
 
+        self.slash_cooldown = max(self.slash_cooldown - delta_time, 0)
+
         # Move the physics engine
         self.physics_engine.step()
         self.physics_engine.apply_force(self.player, self.player.force)
@@ -455,7 +460,7 @@ class GameView(arcade.View):
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         # Left click
-        if button == 1:
+        if button == 1 and not self.slash_cooldown:
             self.player.is_charging_attack = True
         # Right click
         elif button == 4:
@@ -468,7 +473,7 @@ class GameView(arcade.View):
             match bisect_left([
                 quick_attack.charge_time, charge_attack.charge_time, stealth_attack.charge_time
             ], self.player.charge_duration):
-                case 1:
+                case 0 | 1:
                     self.perform_attack(quick_attack)
                 case 2:
                     self.perform_attack(charge_attack)
@@ -489,12 +494,16 @@ class GameView(arcade.View):
 
     def find_enemies_in_range(self):
         """ Returns a list of all enemies in range of player's attack """
-        min_bound, max_bound = (0, math.pi/6) if self.player.is_facing_right else (math.pi * 5/6, math.pi)
+        def enemy_in_view(angle):
+            if self.player.is_facing_right:
+                return -math.pi/12 < angle < math.pi/6
+            else:
+                return math.pi * 5/6 < angle < math.pi or -math.pi * 1/12 < angle < 0
         return [
             enemy
             for enemy in self.scene['Enemy']
             if entity_dist(self.player, enemy) < MELEE_RANGE
-            and min_bound < entity_angle(self.player, enemy) < max_bound
+            and enemy_in_view(entity_angle(self.player, enemy))
         ]
 
     def perform_attack(self, attack: AttackSpec):
