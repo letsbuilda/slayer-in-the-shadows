@@ -1,8 +1,8 @@
 """Custom handlers for things such as collisions."""
 
+from .constants import COLLISION_DAMAGE
 from .sprites.enemy import Enemy
 from .sprites.player import Player
-from .constants import COLLISION_DAMAGE
 
 
 # pylint: disable=unused-argument

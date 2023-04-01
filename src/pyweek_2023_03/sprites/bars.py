@@ -36,8 +36,10 @@ class HealthBar:
         self.remain_bar.center_x = self.character.center_x - (self.remain_bar_width - self.remain_bar.width) / 2
 
 
+# pylint: disable=too-many-instance-attributes)
 class ChargeBar:
-    """ Attack charge bar """
+    """Attack charge bar"""
+
     def __init__(self, character, width: int = 10, height: int = 40, offset: int = 10):
         self.character = character
 
@@ -52,24 +54,24 @@ class ChargeBar:
         self.bar_display = False
 
     def update_charge(self):
-        """ Updates charge progress """
+        """Updates charge progress"""
         if self.character.is_charging_attack:
             self.charge_bar.height = self.full_bar_height * min(self.character.charge_duration / 3, 1) + 0.1
             if not self.bar_display:
-                self.character.game.scene.get_sprite_list('Bars').extend(
+                self.character.game.scene.get_sprite_list("Bars").extend(
                     [self.fill_bar, self.charge_bar, self.half_charge_indicator]
                 )
                 self.bar_display = True
         else:
             self.charge_bar.height = 0.1
             if self.bar_display:
-                self.character.game.scene.get_sprite_list('Bars').remove(self.fill_bar)
-                self.character.game.scene.get_sprite_list('Bars').remove(self.charge_bar)
-                self.character.game.scene.get_sprite_list('Bars').remove(self.half_charge_indicator)
+                self.character.game.scene.get_sprite_list("Bars").remove(self.fill_bar)
+                self.character.game.scene.get_sprite_list("Bars").remove(self.charge_bar)
+                self.character.game.scene.get_sprite_list("Bars").remove(self.half_charge_indicator)
                 self.bar_display = False
 
     def update(self):
-        """ Updates charge bar """
+        """Updates charge bar"""
         self.update_charge()
         self.fill_bar.left = self.character.right + self.offset
         self.fill_bar.center_y = self.character.center_y

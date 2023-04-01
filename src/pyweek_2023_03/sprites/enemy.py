@@ -6,9 +6,13 @@ from random import choice, randint
 import arcade
 
 from ..assets import get_asset_path, get_sprite_path
-from ..constants import ENEMY_RENDER_DISTANCE, FRAMES_PER_RAYCAST, INVULNERABILITY_DURATION
-from .character import Character
+from ..constants import (
+    ENEMY_RENDER_DISTANCE,
+    FRAMES_PER_RAYCAST,
+    INVULNERABILITY_DURATION,
+)
 from .attacks import AttackSpec, default_enemy_attacks
+from .character import Character
 
 
 # pylint: disable=too-many-instance-attributes
@@ -17,14 +21,7 @@ class Enemy(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(
-        self,
-        bottom: float,
-        left: float,
-        sprite: str,
-        health: int,
-        speed: int,
-        attacks: list[AttackSpec],
-        game
+        self, bottom: float, left: float, sprite: str, health: int, speed: int, attacks: list[AttackSpec], game
     ):
         super().__init__(bottom, left, sprite, health, speed, attacks, game, "Detailed")
 
@@ -159,10 +156,10 @@ class Enemy(Character):
     def take_damage(self, damage: int):
         """Handles damage taking"""
         if not self.is_invulnerable:
-            self.health -= damage
-            self.is_invulnerable = True
             self.invulnerable_duration = INVULNERABILITY_DURATION
-            if self.health <= 0:
+            self.is_invulnerable = True
+            self.health -= damage
+            if 0 >= self.health:
                 self.game.kill_enemy(self)
                 return
             self.health_bar.update_health()

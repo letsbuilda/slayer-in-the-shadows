@@ -4,10 +4,11 @@ import arcade
 # pylint: disable=no-name-in-module
 from .. import constants
 from ..assets import get_sprite_path
-from .bars import HealthBar
 from .attacks import AttackSpec
+from .bars import HealthBar
 
 
+# pylint: disable=too-many-instance-attributes
 class Character(arcade.Sprite):
     """Base enemy class from which the various enemy types are made"""
 

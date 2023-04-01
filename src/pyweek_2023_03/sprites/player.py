@@ -8,14 +8,14 @@ from ..assets import get_asset_path, get_sprite_path
 from ..constants import (
     ANIMATION_FREEZE_TIME,
     DASH_COOLDOWN,
+    INVULNERABILITY_DURATION,
     MAX_DASHES,
     SLOW_TIME_COOLDOWN,
     SLOW_TIME_DURATION,
-    INVULNERABILITY_DURATION,
 )
-from .character import Character
 from .attacks import player_attacks
 from .bars import ChargeBar
+from .character import Character
 
 
 # pylint: disable=too-many-instance-attributes
@@ -24,9 +24,7 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, health: int, speed: int, game):
-        super().__init__(
-            bottom, left, None, health, speed, player_attacks, game, character_scaling=2
-        )
+        super().__init__(bottom, left, None, health, speed, player_attacks, game, character_scaling=2)
         self.jump_index = None
         self.dashes = None
         self.dash_cooldown = None
@@ -115,9 +113,7 @@ class Player(Character):
             else:
                 self.texture = self.jump[int(not self.is_facing_right)][7]
         else:
-            self.texture = self.jump[int(not self.is_facing_right)][
-                self.jump_index // (ANIMATION_FREEZE_TIME + 3)
-            ]
+            self.texture = self.jump[int(not self.is_facing_right)][self.jump_index // (ANIMATION_FREEZE_TIME + 3)]
             self.jump_index += 1
             if self.jump_index >= (ANIMATION_FREEZE_TIME + 3) * 5:
                 self.jump_index = -1
@@ -140,7 +136,7 @@ class Player(Character):
         self.is_slowing_time = True
 
     def update(self):
-        """ Updates player """
+        """Updates player"""
         super().update()
         self.charge_bar.update()
 
@@ -164,13 +160,9 @@ class Player(Character):
                 self.is_slowing_time = False
                 self.slow_time_cooldown = SLOW_TIME_COOLDOWN
             else:
-                self.slow_time_duration = max(
-                    self.slow_time_duration - delta_time, 0
-                )
+                self.slow_time_duration = max(self.slow_time_duration - delta_time, 0)
         elif self.slow_time_cooldown:
-            self.slow_time_cooldown = max(
-                self.slow_time_cooldown - delta_time, 0
-            )
+            self.slow_time_cooldown = max(self.slow_time_cooldown - delta_time, 0)
 
         if self.is_charging_attack:
             self.charge_duration += delta_time
