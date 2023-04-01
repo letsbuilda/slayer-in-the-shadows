@@ -527,6 +527,7 @@ class GameView(arcade.View):
 
     def kill_enemy(self, enemy):
         """Called when enemy dies"""
+        self.score += 10
         self.scene['Enemy'].remove(enemy)
         try:
             self.physics_engine.remove_sprite(enemy)
