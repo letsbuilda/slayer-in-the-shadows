@@ -4,7 +4,7 @@ import arcade
 # Screen
 SCREEN_WIDTH = 24 * 64
 SCREEN_HEIGHT = 15 * 64
-SCREEN_TITLE = "pyweek-2023-03"
+SCREEN_TITLE = "Slayer in the Shadows"
 
 # Constants used to scale our sprites from their original size
 CHARACTER_SCALING = 1

@@ -7,7 +7,7 @@ import arcade
 
 def get_asset_path(*paths: str, is_as_file: bool = True):
     """Gets the path for an asset"""
-    file_path = files("pyweek_2023_03")
+    file_path = files("slayer_in_the_shadows")
     file_path = file_path.joinpath("assets")
     for path in paths:
         file_path = file_path.joinpath(path)

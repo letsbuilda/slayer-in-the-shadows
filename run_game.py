@@ -1,5 +1,5 @@
 """PyWeek wrapper for game entrypoint"""
 
-from pyweek_2023_03.__main__ import main
+from slayer_in_the_shadows.__main__ import main
 
 main()

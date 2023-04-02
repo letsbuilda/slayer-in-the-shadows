@@ -11,7 +11,7 @@ finish later.
 To install the game, you need to clone this repo and install the dependencies:
 
 ```commandline
-git clone https://github.com/letsbuilda/pyweek-2023-03.git
+git clone https://github.com/letsbuilda/slayer_in_the_shadows.git
 cd pyweek-2023-03
 python -m pip install -r requirements.txt
 ```
