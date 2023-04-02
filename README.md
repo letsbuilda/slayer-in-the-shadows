@@ -27,7 +27,8 @@ python -m run_game
 
 ## Controls
 
-Jump: W or Space
-Right: D
-Left: A
-Attack: Left click
+Jump: W or Space  
+Right: D  
+Left: A  
+Attack: Left click  
+
