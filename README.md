@@ -8,22 +8,15 @@ finish later.
 
 ## Installation
 
-To install the game, you need to clone this repo and install the dependencies:
+You can install the game from PyPI and run it with Python:
 
 ```commandline
-git clone https://github.com/letsbuilda/slayer_in_the_shadows.git
-cd slayer_in_the_shadows
-python -m pip install -r requirements.txt
+python -m pip install slayer-in-the-shadows
+python -m slayer_in_the_shadows
 ```
 
 > Note: Replace `python` with the proper executable name. On Windows, this is usually `py` and on other systems, it's
 > usually `python3`.
-
-Once the dependencies are installed, run the game:
-
-```commandline
-python -m run_game
-```
 
 ## Controls
 
