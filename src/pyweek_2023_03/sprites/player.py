@@ -8,10 +8,13 @@ from ..assets import get_asset_path, get_sprite_path
 from ..constants import (
     ANIMATION_FREEZE_TIME,
     DASH_COOLDOWN,
+    INVULNERABILITY_DURATION,
     MAX_DASHES,
     SLOW_TIME_COOLDOWN,
     SLOW_TIME_DURATION,
 )
+from .attacks import player_attacks
+from .bars import ChargeBar
 from .character import Character
 
 
@@ -21,9 +24,7 @@ class Player(Character):
 
     # pylint: disable=too-many-arguments
     def __init__(self, bottom, left, health: int, speed: int, game):
-        super().__init__(
-            bottom, left, None, health, speed, game, character_scaling=2
-        )
+        super().__init__(bottom, left, None, health, speed, player_attacks, game, character_scaling=2)
         self.jump_index = None
         self.dashes = None
         self.dash_cooldown = None
@@ -36,6 +37,10 @@ class Player(Character):
         self.is_on_ground = None
         self.force = None
         self.last_position = None
+
+        self.is_charging_attack = None
+        self.charge_duration = None
+
         with get_sprite_path("player", "idle") as sprite_path:
             self.idle = [[], []]
             for i in range(2):
@@ -71,6 +76,8 @@ class Player(Character):
         with get_asset_path("sounds", "whoosh.wav") as soundfile:
             self.whoosh = arcade.load_sound(soundfile)
 
+        self.charge_bar = ChargeBar(self)
+
     def setup_player(self):
         """Setup the player"""
         self.dashes = MAX_DASHES
@@ -84,6 +91,9 @@ class Player(Character):
         self.is_on_ground = True
         self.force = (0, 0)
         self.jump_index = -1
+
+        self.is_charging_attack = False
+        self.charge_duration = 0
 
     def update_animation(self, delta_time: float = 1 / 60):
         """Update the animation"""
@@ -103,9 +113,7 @@ class Player(Character):
             else:
                 self.texture = self.jump[int(not self.is_facing_right)][7]
         else:
-            self.texture = self.jump[int(not self.is_facing_right)][
-                self.jump_index // (ANIMATION_FREEZE_TIME + 3)
-            ]
+            self.texture = self.jump[int(not self.is_facing_right)][self.jump_index // (ANIMATION_FREEZE_TIME + 3)]
             self.jump_index += 1
             if self.jump_index >= (ANIMATION_FREEZE_TIME + 3) * 5:
                 self.jump_index = -1
@@ -127,8 +135,15 @@ class Player(Character):
         self.slow_time_duration = SLOW_TIME_DURATION
         self.is_slowing_time = True
 
+    def update(self):
+        """Updates player"""
+        super().update()
+        self.charge_bar.update()
+
     def on_update(self, delta_time: float = 1 / 60):
-        """Reset dash after 1 second"""
+        """
+        Time related cooldowns like attack and invulnerability
+        """
         # Dash
         # If still on cooldown
         if self.dash_cooldown:
@@ -145,10 +160,22 @@ class Player(Character):
                 self.is_slowing_time = False
                 self.slow_time_cooldown = SLOW_TIME_COOLDOWN
             else:
-                self.slow_time_duration = max(
-                    self.slow_time_duration - delta_time, 0
-                )
+                self.slow_time_duration = max(self.slow_time_duration - delta_time, 0)
         elif self.slow_time_cooldown:
-            self.slow_time_cooldown = max(
-                self.slow_time_cooldown - delta_time, 0
-            )
+            self.slow_time_cooldown = max(self.slow_time_cooldown - delta_time, 0)
+
+        if self.is_charging_attack:
+            self.charge_duration += delta_time
+
+        super().on_update(delta_time)
+
+    def take_damage(self, damage: int):
+        """Handles damage taking"""
+        if not self.is_invulnerable:
+            self.health -= damage
+            self.is_invulnerable = True
+            self.invulnerable_duration = INVULNERABILITY_DURATION
+            if self.health <= 0:
+                self.game.setup()
+                return
+            self.health_bar.update_health()
