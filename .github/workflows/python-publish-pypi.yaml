@@ -4,6 +4,10 @@ on:
   release:
     types: [released]
 
+
+permissions:
+  id-token: write
+
 jobs:
   publish:
     uses: darbiadev/.github/.github/workflows/python-pypi-publish.yaml@main
