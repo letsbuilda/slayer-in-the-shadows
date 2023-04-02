@@ -12,7 +12,7 @@ To install the game, you need to clone this repo and install the dependencies:
 
 ```commandline
 git clone https://github.com/letsbuilda/slayer_in_the_shadows.git
-cd pyweek-2023-03
+cd slayer_in_the_shadows
 python -m pip install -r requirements.txt
 ```
 
@@ -31,4 +31,3 @@ Jump: W or Space
 Right: D  
 Left: A  
 Attack: Left click  
-
