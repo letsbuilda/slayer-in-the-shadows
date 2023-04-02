@@ -5,5 +5,5 @@ Changelog
 =========
 
 
-- :release:`0.1.0 <15th March 2023>`
-- :feature:`1` Initialize project
+- :release:`1.0.0 <1st April 2023>`
+- :feature:`35` Initial release

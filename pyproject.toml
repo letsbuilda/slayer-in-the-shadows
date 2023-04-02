@@ -1,7 +1,7 @@
 [project]
 name = "slayer-in-the-shadows"
-version = "0.1.0"
-description = "Our entry to PyWeek March 2023"
+version = "1.0.0"
+description = "Lets Build A Game's entry into PyWeek 35"
 authors = [
     { name = "Bradley Reynolds", email = "bradley.reynolds@darbia.dev" },
 ]
