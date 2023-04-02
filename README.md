@@ -1,28 +1,35 @@
 # Slayer in the Shadows
 
-Our entry to **[PyWeek 35](https://pyweek.org)**.
+Our entry to **[PyWeek 35](https://pyweek.org/35/)**.
 
-Note: Unfortunately, we were unable to complete the game. We wanted to add in levels, enemy sprites, and ranged weapons,
+Unfortunately, we were unable to complete the game. We wanted to add in levels, enemy sprites, and ranged weapons,
 but we all got busy with life. However, we still want to show off what we had, and we will still probably work on it and
 finish later.
 
 ## Installation
 
-To install the game, you need to clone this repo and install the dependencies:
+You may either run the game from this source or install it from PyPI. If you downloaded
+this from PyWeek, it is recommended to run from source so that you install less things.
+
+### Source
+
+In the directory of this project, run the following:
 
 ```commandline
-git clone https://github.com/letsbuilda/pyweek-2023-03.git
-cd pyweek-2023-03
 python -m pip install -r requirements.txt
+python -m run_game
 ```
 
 > Note: Replace `python` with the proper executable name. On Windows, this is usually `py` and on other systems, it's
 > usually `python3`.
 
-Once the dependencies are installed, run the game:
+### PyPI
+
+The game is also available on the Python Package Index, and can be installed with one command:
 
 ```commandline
-python -m run_game
+python -m pip install slayer-in-the-shadows
+python -m slayer_in_the_shadows
 ```
 
 ## Controls
