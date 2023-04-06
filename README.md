@@ -37,5 +37,4 @@ python -m slayer_in_the_shadows
 Jump: W or Space  
 Right: D  
 Left: A  
-Attack: Left click  
-
+Attack: Left click
