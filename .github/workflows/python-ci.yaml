@@ -12,7 +12,7 @@ jobs:
 
   lint:
     needs: pre-commit
-    uses: darbiadev/.github/.github/workflows/python-lint.yaml@5083c96ad92e1a10fbcf34a04221da8d353e894a
+    uses: darbiadev/.github/.github/workflows/python-lint.yaml@9e24c0c311791b544f8e21a6d3f979ad1c89462c
 
   test:
     needs: lint
