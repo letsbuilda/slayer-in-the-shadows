@@ -8,20 +8,29 @@ on:
 
 jobs:
   pre-commit:
-    uses: darbiadev/.github/.github/workflows/generic-precommit.yaml@main
+    uses: darbiadev/.github/.github/workflows/generic-precommit.yaml@9160d4ddd590c15fe8a1f6d1704bf8806969d2b6 # v4.0.1
 
   lint:
     needs: pre-commit
-    uses: darbiadev/.github/.github/workflows/python-lint.yaml@5083c96ad92e1a10fbcf34a04221da8d353e894a
+    uses: darbiadev/.github/.github/workflows/python-lint.yaml@9160d4ddd590c15fe8a1f6d1704bf8806969d2b6 # v4.0.1
 
   test:
     needs: lint
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        python-version: [ "3.10", "3.11" ]
+        os: [ ubuntu-latest ]
+        python-version: [ "3.11" ]
 
-    uses: darbiadev/.github/.github/workflows/python-test.yaml@main
+    uses: darbiadev/.github/.github/workflows/python-test.yaml@9160d4ddd590c15fe8a1f6d1704bf8806969d2b6 # v4.0.1
     with:
       os: ${{ matrix.os }}
       python-version: ${{ matrix.python-version }}
+
+  docs:
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    uses: darbiadev/.github/.github/workflows/github-pages-python-sphinx.yaml@9160d4ddd590c15fe8a1f6d1704bf8806969d2b6 # v4.0.1
