@@ -9,7 +9,7 @@ license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "arcade==2.6.17",
+    "arcade==3.3.3",
 ]
 
 [project.urls]
